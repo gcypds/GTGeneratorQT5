@@ -184,7 +184,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QCheckBox" name="BGS_chbox">
+           <widget class="QCheckBox" name="enhance_chbox">
             <property name="text">
              <string>ROIs enhanced?</string>
             </property>
