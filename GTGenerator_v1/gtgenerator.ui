@@ -20,21 +20,14 @@
       <item>
        <layout class="QVBoxLayout" name="tagging_layout">
         <item>
-         <layout class="QHBoxLayout" name="video_layout"/>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <item>
-           <widget class="QPushButton" name="playVideo_button">
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="video_slider">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+           <widget class="playerWidget" name="GTplayerWidget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
            </widget>
           </item>
@@ -379,6 +372,14 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>playerWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">playerwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="gtgenerator.qrc"/>
  </resources>

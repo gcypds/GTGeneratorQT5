@@ -5,11 +5,13 @@
 #include "ui_gtgenerator.h"
 #include "ui_newProject.h"
 #include "ui_saveProject.h"
-#include <QtMultimediaWidgets>
+#include <QFileDialog>
+#include <qmessagebox.h>
 #include <qdebug.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "opencvprocessor.h"
+#include "playerwidget.h"
 
 class GTGenerator : public QMainWindow
 {
@@ -17,7 +19,13 @@ class GTGenerator : public QMainWindow
 
 public:
 	GTGenerator(QWidget *parent = 0);
+
 	~GTGenerator();
+
+	
+	int fps;
+	string imgSeq_path;
+	QFileInfoList imgSeq_files;	//List of image sequence files
 
 private:
 
@@ -35,11 +43,15 @@ private:
 	QDialog *newProject;
 	Ui_newProject_dialog *ui_newProject;
 
+	//Player widget 
+	Ui_playerWidget *ui_GTplayerWidget;
+
 	QString sourcePath;	//Path to load source
 	QFileInfo videoFile;
 	int flag_src;	//Data source flag (1: video, 2: image sequence)
 
 	QProgressDialog *progressDialog;
+
 
 public slots:
 
@@ -47,9 +59,13 @@ public slots:
 
 void showNewProjectDialog();
 
-void selectVideo(bool state);
+void selectSource(bool state);
 
 void loadSource();
+
+void acceptSource_convertVideo();
+
+
 
 
 

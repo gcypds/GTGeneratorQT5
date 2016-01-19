@@ -1,5 +1,7 @@
 #include "gtgenerator.h"
 
+#define Default_FPS 10
+
 GTGenerator::GTGenerator(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -15,13 +17,22 @@ GTGenerator::GTGenerator(QWidget *parent)
 	ui_newProject = new Ui_newProject_dialog();
 	ui_newProject->setupUi(newProject);
 
+	//Show new project dialog
 	connect(GTgui->actionNewProject, SIGNAL(triggered()), this, SLOT(showNewProjectDialog()));
 
-	connect(ui_newProject->sourceVideo_button, SIGNAL(toggled(bool)), this, SLOT(selectVideo(bool)));
+	//Change source flag if user changes source buttons 
+	connect(ui_newProject->sourceVideo_button, SIGNAL(toggled(bool)), this, SLOT(selectSource(bool)));
 
+	//Load source according to source flag
 	connect(ui_newProject->browsePath_button, SIGNAL(clicked()), this, SLOT(loadSource()));
 
+	//Accept new project and convert video to image sequence if video is the selected source
+	connect(ui_newProject->acceptNew_button, SIGNAL(clicked()), this, SLOT(acceptSource_convertVideo()));
+
 	//------------------------------------------------------------------------------------
+	//Set into GTgui the player widget from playerWidget class
+	
+
 }
 
 GTGenerator::~GTGenerator()
@@ -40,7 +51,7 @@ void GTGenerator::showNewProjectDialog()
 	newProject->exec();
 }
 
-void GTGenerator::selectVideo(bool state)
+void GTGenerator::selectSource(bool state)
 {
 	if (state)
 		flag_src = 1;	//Select video
@@ -72,27 +83,6 @@ void GTGenerator::load_videoSource()
 	if (!sourcePath.isEmpty())
 	{
 		ui_newProject->sourcePath_edit->setText(sourcePath);
-
-		//Convert video to image sequence and save to directory
-		QDir currentDir = QDir(sourcePath);
-		qDebug() << "currentDir: " << videoFile.dir().path() << endl;
-		qDebug() << "currentFile: " << videoFile.fileName() << endl;
-
-		QDir videoFramesDir = QDir(videoFile.dir().path() + "\\" + videoFile.baseName().section(".", 0, 0) + "_video_frames\\");
-
-		qDebug() << "videoFramesDir" << videoFramesDir.path() << endl;
-
-		if (!videoFramesDir.exists()) {
-			QDir().mkdir(videoFramesDir.path());
-		}
-
-		
-
-		OpenCVProcessor openCVProcessor = OpenCVProcessor();
-		openCVProcessor.setProgressDialog(progressDialog);
-		double fps = openCVProcessor.saveFramesFromVideo(sourcePath, videoFramesDir.path());
-
-		currentDir = QDir(videoFramesDir.path());
 	}
 }
 
@@ -112,6 +102,9 @@ void GTGenerator::load_imageSource()
 		if (!files.isEmpty())
 		{
 			ui_newProject->sourcePath_edit->setText(sourcePath);
+			fps = Default_FPS;
+			imgSeq_files = currentDir.entryInfoList();
+			imgSeq_path = sourcePath.toUtf8().constData();
 		}
 		else
 		{
@@ -123,4 +116,41 @@ void GTGenerator::load_imageSource()
 			errorBox.exec();
 		}
 	}
+}
+
+
+void GTGenerator::acceptSource_convertVideo()
+{
+	//Close new project dialog
+	newProject->close();
+
+	//Convert video to image sequence and save to directory
+	if (flag_src==1)
+	{
+		QDir currentDir = QDir(sourcePath);
+
+		QString QimgSeq_path = videoFile.dir().path() + "/" + videoFile.baseName().section(".", 0, 0) + "_video_frames/";
+
+		QDir videoFramesDir = QDir(QimgSeq_path);
+
+		if (!videoFramesDir.exists()) {
+			QDir().mkdir(videoFramesDir.path());
+		}
+
+		OpenCVProcessor openCVProcessor = OpenCVProcessor();
+		progressDialog = new QProgressDialog(this);
+		progressDialog->setFixedSize(QSize(400, 100));
+		openCVProcessor.setProgressDialog(progressDialog);
+		fps = openCVProcessor.saveFramesFromVideo(sourcePath, videoFramesDir.path());
+
+		videoFramesDir.setFilter(QDir::Files | QDir::NoSymLinks);
+		imgSeq_files = videoFramesDir.entryInfoList();
+		imgSeq_path = QimgSeq_path.toUtf8().constData();
+	}	
+
+	//Copy variables to playerWidget class
+	GTgui->GTplayerWidget->fps = fps;
+	GTgui->GTplayerWidget->imgSeq_files = imgSeq_files;
+	GTgui->GTplayerWidget->imgSeq_path = imgSeq_path;
+	std::cout << imgSeq_path;
 }
