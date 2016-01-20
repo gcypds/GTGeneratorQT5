@@ -25,7 +25,7 @@ public:
 	
 	int fps;
 	string imgSeq_path;
-	QFileInfoList imgSeq_files;	//List of image sequence files
+	QStringList imgSeq_list;
 
 private:
 

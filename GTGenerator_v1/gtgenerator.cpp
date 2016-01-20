@@ -1,6 +1,6 @@
 #include "gtgenerator.h"
 
-#define Default_FPS 10
+#define Default_FPS 15
 
 GTGenerator::GTGenerator(QWidget *parent)
 	: QMainWindow(parent)
@@ -30,9 +30,7 @@ GTGenerator::GTGenerator(QWidget *parent)
 	connect(ui_newProject->acceptNew_button, SIGNAL(clicked()), this, SLOT(acceptSource_convertVideo()));
 
 	//------------------------------------------------------------------------------------
-	//Set into GTgui the player widget from playerWidget class
 	
-
 }
 
 GTGenerator::~GTGenerator()
@@ -103,8 +101,8 @@ void GTGenerator::load_imageSource()
 		{
 			ui_newProject->sourcePath_edit->setText(sourcePath);
 			fps = Default_FPS;
-			imgSeq_files = currentDir.entryInfoList();
 			imgSeq_path = sourcePath.toUtf8().constData();
+			imgSeq_list = files;
 		}
 		else
 		{
@@ -127,9 +125,7 @@ void GTGenerator::acceptSource_convertVideo()
 	//Convert video to image sequence and save to directory
 	if (flag_src==1)
 	{
-		QDir currentDir = QDir(sourcePath);
-
-		QString QimgSeq_path = videoFile.dir().path() + "/" + videoFile.baseName().section(".", 0, 0) + "_video_frames/";
+		QString QimgSeq_path = videoFile.dir().path() + "/" + videoFile.baseName().section(".", 0, 0) + "_video_frames";
 
 		QDir videoFramesDir = QDir(QimgSeq_path);
 
@@ -144,13 +140,18 @@ void GTGenerator::acceptSource_convertVideo()
 		fps = openCVProcessor.saveFramesFromVideo(sourcePath, videoFramesDir.path());
 
 		videoFramesDir.setFilter(QDir::Files | QDir::NoSymLinks);
-		imgSeq_files = videoFramesDir.entryInfoList();
 		imgSeq_path = QimgSeq_path.toUtf8().constData();
+
+		QStringList filters;
+		filters << "*.png" << "*.jpg" << "*.jpeg";
+		imgSeq_list = videoFramesDir.entryList(filters, QDir::Files | QDir::NoSymLinks);
 	}	
 
 	//Copy variables to playerWidget class
 	GTgui->GTplayerWidget->fps = fps;
-	GTgui->GTplayerWidget->imgSeq_files = imgSeq_files;
 	GTgui->GTplayerWidget->imgSeq_path = imgSeq_path;
-	std::cout << imgSeq_path;
+	GTgui->GTplayerWidget->imgSeq_list = imgSeq_list;
+
+	//Initialize player
+	GTgui->GTplayerWidget->playerInitialization();
 }

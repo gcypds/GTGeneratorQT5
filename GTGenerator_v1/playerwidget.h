@@ -5,6 +5,7 @@
 #include "ui_playerWidget.h"
 #include <iostream>
 #include "opencvprocessor.h"
+#include <qtimer.h>
 
 class playerWidget : public QWidget
 {
@@ -15,26 +16,44 @@ public:
 
 	~playerWidget();
 
+	void playerInitialization();
+
 	bool play_state;	//true:play, false:pause
 	int fps;
 	string imgSeq_path; 
-	QFileInfoList imgSeq_files;	//List of image sequence files
-
-private:
+	QStringList imgSeq_list;
 
 	//playerWidget Gui
 	Ui::playerWidget *GTplayerWidget;
 
+private:
+	//Frame info
 	int frame_idx;
-	
-	void getFrame();
+	cv::Mat currFrame;
+	QImage Qim_currFrame;
+	QPixmap Qpix_currFrame;
+	QFileInfo frame_info;
+	QString frame_name;
+	string frame_path;
+
+	//Timer
+	QTimer *playTimer;
+
+	bool slider_mov;	//true:slider moved by user, false:~
+
+	//Play pause icons
+	QIcon *playIcon;
+	QIcon *pauseIcon;
 
 	public slots:
 
 	void on_playButton_clicked();
 
-	cv::Mat currFrame;
-	QImage QcurrFrame;
+	void on_progressSlider_moved(int val);
+
+	void on_progressSlider_released();
+
+	void displayFrame();
 
 };
 

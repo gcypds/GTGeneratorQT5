@@ -57,6 +57,10 @@ public:
         horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
         play_button = new QPushButton(playerWidget);
         play_button->setObjectName(QStringLiteral("play_button"));
+        QIcon icon;
+        icon.addFile(QStringLiteral("Resources/play128.png"), QSize(), QIcon::Normal, QIcon::Off);
+        play_button->setIcon(icon);
+        play_button->setIconSize(QSize(24, 20));
 
         horizontalLayout_2->addWidget(play_button);
 
@@ -82,7 +86,7 @@ public:
     {
         playerWidget->setWindowTitle(QApplication::translate("playerWidget", "Form", 0));
         image_label->setText(QString());
-        play_button->setText(QApplication::translate("playerWidget", "Play", 0));
+        play_button->setText(QString());
     } // retranslateUi
 
 };
