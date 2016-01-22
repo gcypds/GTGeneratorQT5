@@ -2,16 +2,27 @@
 #define GTGENERATOR_H
 
 #include <QtWidgets/QMainWindow>
-#include "ui_gtgenerator.h"
-#include "ui_newProject.h"
-#include "ui_saveProject.h"
 #include <QFileDialog>
 #include <qmessagebox.h>
 #include <qdebug.h>
+#include <qcolordialog.h>
+
+#include "ui_gtgenerator.h"
+#include "ui_newProject.h"
+#include "ui_saveProject.h"
+#include "ui_createLabel.h"
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
 #include "opencvprocessor.h"
 #include "playerwidget.h"
+
+struct label_info
+{
+	QString name;
+	QColor color;
+};
 
 class GTGenerator : public QMainWindow
 {
@@ -21,17 +32,23 @@ public:
 	GTGenerator(QWidget *parent = 0);
 
 	~GTGenerator();
-
-	
+		
 	int fps;
 	string imgSeq_path;
 	QStringList imgSeq_list;
 
+	QVector<label_info> labels_reg;		//Labels register
+
 private:
 
+	//Functions---------------
 	void load_videoSource();
 
 	void load_imageSource();
+
+	void update_labelsTable();
+
+	void initialize_labelsTable();
 
 	//Variables---------------
 
@@ -39,12 +56,16 @@ private:
 	Ui::GTGeneratorClass ui;
 	Ui_GTGeneratorClass * GTgui;
 
-	//New project Gui
+	//New project Dialog
 	QDialog *newProject;
 	Ui_newProject_dialog *ui_newProject;
 
 	//Player widget 
 	Ui_playerWidget *ui_GTplayerWidget;
+
+	//Create label Dialog
+	QDialog *createLabel;
+	Ui_createLabel_Dialog *ui_createLabel;
 
 	QString sourcePath;	//Path to load source
 	QFileInfo videoFile;
@@ -52,6 +73,9 @@ private:
 
 	QProgressDialog *progressDialog;
 
+	//Create label information
+	QColor label_color;
+	QString label_name;
 
 public slots:
 
@@ -65,9 +89,15 @@ void loadSource();
 
 void acceptSource_convertVideo();
 
+//Create label slots
 
+void showCreateLabelDialog();
 
+void selectLabelColor();
 
+void acceptNewLabel();
+
+void cancelNewLabel();
 
 };
 

@@ -16,7 +16,6 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
-#include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
@@ -47,8 +46,8 @@ public:
     QGroupBox *labels_group;
     QWidget *verticalLayoutWidget_3;
     QVBoxLayout *verticalLayout_2;
-    QListWidget *listWidget;
-    QPushButton *pushButton;
+    QTableWidget *labels_table;
+    QPushButton *createLabel_button;
     QGroupBox *currentROI_group;
     QTableWidget *tableWidget;
     QGroupBox *ROIenhance_group;
@@ -150,36 +149,31 @@ public:
         verticalLayout_2->setContentsMargins(11, 11, 11, 11);
         verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
         verticalLayout_2->setContentsMargins(0, 0, 0, 0);
-        listWidget = new QListWidget(verticalLayoutWidget_3);
-        listWidget->setObjectName(QStringLiteral("listWidget"));
-        QSizePolicy sizePolicy2(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        labels_table = new QTableWidget(verticalLayoutWidget_3);
+        labels_table->setObjectName(QStringLiteral("labels_table"));
+
+        verticalLayout_2->addWidget(labels_table);
+
+        createLabel_button = new QPushButton(verticalLayoutWidget_3);
+        createLabel_button->setObjectName(QStringLiteral("createLabel_button"));
+        QSizePolicy sizePolicy2(QSizePolicy::Expanding, QSizePolicy::Fixed);
         sizePolicy2.setHorizontalStretch(0);
         sizePolicy2.setVerticalStretch(0);
-        sizePolicy2.setHeightForWidth(listWidget->sizePolicy().hasHeightForWidth());
-        listWidget->setSizePolicy(sizePolicy2);
+        sizePolicy2.setHeightForWidth(createLabel_button->sizePolicy().hasHeightForWidth());
+        createLabel_button->setSizePolicy(sizePolicy2);
 
-        verticalLayout_2->addWidget(listWidget);
-
-        pushButton = new QPushButton(verticalLayoutWidget_3);
-        pushButton->setObjectName(QStringLiteral("pushButton"));
-        QSizePolicy sizePolicy3(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        sizePolicy3.setHorizontalStretch(0);
-        sizePolicy3.setVerticalStretch(0);
-        sizePolicy3.setHeightForWidth(pushButton->sizePolicy().hasHeightForWidth());
-        pushButton->setSizePolicy(sizePolicy3);
-
-        verticalLayout_2->addWidget(pushButton);
+        verticalLayout_2->addWidget(createLabel_button);
 
 
         verticalLayout->addWidget(labels_group);
 
         currentROI_group = new QGroupBox(centralWidget);
         currentROI_group->setObjectName(QStringLiteral("currentROI_group"));
-        QSizePolicy sizePolicy4(QSizePolicy::Fixed, QSizePolicy::Preferred);
-        sizePolicy4.setHorizontalStretch(0);
-        sizePolicy4.setVerticalStretch(0);
-        sizePolicy4.setHeightForWidth(currentROI_group->sizePolicy().hasHeightForWidth());
-        currentROI_group->setSizePolicy(sizePolicy4);
+        QSizePolicy sizePolicy3(QSizePolicy::Fixed, QSizePolicy::Preferred);
+        sizePolicy3.setHorizontalStretch(0);
+        sizePolicy3.setVerticalStretch(0);
+        sizePolicy3.setHeightForWidth(currentROI_group->sizePolicy().hasHeightForWidth());
+        currentROI_group->setSizePolicy(sizePolicy3);
         currentROI_group->setMinimumSize(QSize(300, 0));
         currentROI_group->setMaximumSize(QSize(350, 16777215));
         tableWidget = new QTableWidget(currentROI_group);
@@ -190,8 +184,8 @@ public:
 
         ROIenhance_group = new QGroupBox(centralWidget);
         ROIenhance_group->setObjectName(QStringLiteral("ROIenhance_group"));
-        sizePolicy4.setHeightForWidth(ROIenhance_group->sizePolicy().hasHeightForWidth());
-        ROIenhance_group->setSizePolicy(sizePolicy4);
+        sizePolicy3.setHeightForWidth(ROIenhance_group->sizePolicy().hasHeightForWidth());
+        ROIenhance_group->setSizePolicy(sizePolicy3);
         ROIenhance_group->setMinimumSize(QSize(300, 0));
         ROIenhance_group->setMaximumSize(QSize(350, 16777215));
         verticalLayoutWidget_4 = new QWidget(ROIenhance_group);
@@ -301,7 +295,7 @@ public:
         actionSettings->setText(QApplication::translate("GTGeneratorClass", "Settings", 0));
         actionHelp->setText(QApplication::translate("GTGeneratorClass", "Help", 0));
         labels_group->setTitle(QApplication::translate("GTGeneratorClass", "Labels", 0));
-        pushButton->setText(QApplication::translate("GTGeneratorClass", "+ New Label", 0));
+        createLabel_button->setText(QApplication::translate("GTGeneratorClass", "+ New Label", 0));
         currentROI_group->setTitle(QApplication::translate("GTGeneratorClass", "Current frame ROIs", 0));
         ROIenhance_group->setTitle(QApplication::translate("GTGeneratorClass", "ROI enhancement and features", 0));
         pushButton_2->setText(QApplication::translate("GTGeneratorClass", "Settings", 0));

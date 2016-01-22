@@ -10,7 +10,7 @@ GTGenerator::GTGenerator(QWidget *parent)
 	GTgui->setupUi(this);
 
 	//------------------------------------------------------------------------------------
-	//New project slots and initialization
+	//New project Dialog slots and initialization
 
 	//Create NewProject Dialog
 	newProject = new QDialog(this);
@@ -30,7 +30,27 @@ GTGenerator::GTGenerator(QWidget *parent)
 	connect(ui_newProject->acceptNew_button, SIGNAL(clicked()), this, SLOT(acceptSource_convertVideo()));
 
 	//------------------------------------------------------------------------------------
-	
+	//Create label Dialog slots and initialization
+
+	//Create NewProject Dialog
+	createLabel = new QDialog(this);
+	ui_createLabel = new Ui_createLabel_Dialog();
+	ui_createLabel->setupUi(createLabel);
+
+	//Show create label dialog
+	connect(GTgui->createLabel_button, SIGNAL(clicked()), this, SLOT(showCreateLabelDialog()));
+
+	//Select color dialog
+	connect(ui_createLabel->labelColor_button, SIGNAL(clicked()), this, SLOT(selectLabelColor()));
+
+	//Accept new label
+	connect(ui_createLabel->acceptLabel, SIGNAL(clicked()), this, SLOT(acceptNewLabel()));
+
+	//Cancel new label
+	connect(ui_createLabel->cancelLabel, SIGNAL(clicked()), this, SLOT(cancelNewLabel()));
+
+	//Initialize labels table
+	initialize_labelsTable();
 }
 
 GTGenerator::~GTGenerator()
@@ -116,7 +136,6 @@ void GTGenerator::load_imageSource()
 	}
 }
 
-
 void GTGenerator::acceptSource_convertVideo()
 {
 	//Close new project dialog
@@ -154,4 +173,103 @@ void GTGenerator::acceptSource_convertVideo()
 
 	//Initialize player
 	GTgui->GTplayerWidget->playerInitialization();
+}
+
+void GTGenerator::showCreateLabelDialog()
+{
+	//Initialize createLabel button color with blue
+	label_color = QColor(0, 0, 255, 255);
+
+	QString s("background: #"
+		+ QString(label_color.red() < 16 ? "0" : "") + QString::number(label_color.red(), 16)
+		+ QString(label_color.green() < 16 ? "0" : "") + QString::number(label_color.green(), 16)
+		+ QString(label_color.blue() < 16 ? "0" : "") + QString::number(label_color.blue(), 16) + ";");
+	ui_createLabel->labelColor_button->setStyleSheet(s);
+	ui_createLabel->labelColor_button->update();
+
+	//Initialize label name
+	ui_createLabel->labelName_input->setText("Person");
+
+	//Display Dialog
+	createLabel->show();
+}
+
+void GTGenerator::selectLabelColor()
+{
+	//Select color dialog
+	label_color = QColorDialog::getColor();
+
+	//Set the selected color to the createLabel button
+	QString s("background: #"
+		+ QString(label_color.red() < 16 ? "0" : "") + QString::number(label_color.red(), 16)
+		+ QString(label_color.green() < 16 ? "0" : "") + QString::number(label_color.green(), 16)
+		+ QString(label_color.blue() < 16 ? "0" : "") + QString::number(label_color.blue(), 16) + ";");
+	ui_createLabel->labelColor_button->setStyleSheet(s);
+	ui_createLabel->labelColor_button->update();
+}
+
+void GTGenerator::acceptNewLabel()
+{
+	//Get label name
+	label_name = ui_createLabel->labelName_input->text();
+
+	//Save new label in labels register
+	label_info new_label_struct;
+	new_label_struct.color = label_color;
+	new_label_struct.name = label_name;
+	labels_reg.push_back(new_label_struct);
+
+	//Close Dialog
+	createLabel->close();
+
+	//Update Labels table
+	update_labelsTable();
+}
+
+void GTGenerator::cancelNewLabel()
+{
+	//Close Dialog
+	createLabel->close();
+}
+
+void GTGenerator::initialize_labelsTable()
+{
+	QTableWidget *LabelsTable = GTgui->labels_table;
+	LabelsTable->setColumnCount(2);
+	LabelsTable->setRowCount(0);
+
+	QStringList column_names;
+	column_names << "Label" << "Color";
+	LabelsTable->setHorizontalHeaderLabels(column_names);
+	LabelsTable->setColumnWidth(0, 270);
+
+	LabelsTable->verticalHeader()->setVisible(false);
+	LabelsTable->horizontalHeader()->setStretchLastSection(true);
+
+	LabelsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+	LabelsTable->setSelectionMode(QAbstractItemView::SingleSelection);
+}
+
+void GTGenerator::update_labelsTable()
+{
+	QTableWidget *LabelsTable = GTgui->labels_table;
+	int newLabel_row = labels_reg.size()-1;
+	LabelsTable->setRowCount(newLabel_row+1);
+
+	//Input label name in table
+	std::cout << labels_reg[newLabel_row ].name.toUtf8().constData();
+	QTableWidgetItem * name_item = new QTableWidgetItem(labels_reg[newLabel_row ].name);
+	name_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+	LabelsTable->setItem(newLabel_row, 0, name_item);
+
+	//Draw square with the selected label color
+	QWidget *pWidget = new QWidget();
+	QString s("background: #"
+		+ QString(labels_reg[newLabel_row].color.red() < 16 ? "0" : "") + QString::number(labels_reg[newLabel_row].color.red(), 16)
+		+ QString(labels_reg[newLabel_row].color.green() < 16 ? "0" : "") + QString::number(labels_reg[newLabel_row].color.green(), 16)
+		+ QString(labels_reg[newLabel_row].color.blue() < 16 ? "0" : "") + QString::number(labels_reg[newLabel_row].color.blue(), 16) + ";");
+	pWidget->setStyleSheet(s);
+	LabelsTable->setCellWidget(newLabel_row, 1, pWidget);
+
+	LabelsTable->selectRow(newLabel_row);
 }

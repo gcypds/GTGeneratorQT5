@@ -132,3 +132,4 @@ void playerWidget::on_progressSlider_released()
 	//Display frame when slider is released
 	displayFrame();
 }
+
