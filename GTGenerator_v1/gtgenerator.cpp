@@ -29,6 +29,9 @@ GTGenerator::GTGenerator(QWidget *parent)
 	//Accept new project and convert video to image sequence if video is the selected source
 	connect(ui_newProject->acceptNew_button, SIGNAL(clicked()), this, SLOT(acceptSource_convertVideo()));
 
+	//Cancel new project
+	connect(ui_newProject->cancelNew_button, SIGNAL(clicked()), this, SLOT(cancel_newProject()));
+
 	//------------------------------------------------------------------------------------
 	//Create label Dialog slots and initialization
 
@@ -51,6 +54,14 @@ GTGenerator::GTGenerator(QWidget *parent)
 
 	//Initialize labels table
 	initialize_labelsTable();
+
+	//Initialize labels ID register
+	labelID_reg = 0;
+
+	//------------------------------------------------------------------------------------
+	//Labels table interaction functions
+
+	connect(GTgui->labels_table, SIGNAL(itemClicked(QTableWidgetItem *)), this, SLOT(currLabel_change(QTableWidgetItem *)));
 }
 
 GTGenerator::~GTGenerator()
@@ -175,6 +186,12 @@ void GTGenerator::acceptSource_convertVideo()
 	GTgui->GTplayerWidget->playerInitialization();
 }
 
+void GTGenerator::cancel_newProject()
+{
+	//Close new project dialog
+	newProject->close();
+}
+
 void GTGenerator::showCreateLabelDialog()
 {
 	//Initialize createLabel button color with blue
@@ -213,17 +230,29 @@ void GTGenerator::acceptNewLabel()
 	//Get label name
 	label_name = ui_createLabel->labelName_input->text();
 
-	//Save new label in labels register
+	//Construct new label struct
 	label_info new_label_struct;
 	new_label_struct.color = label_color;
 	new_label_struct.name = label_name;
-	labels_reg.push_back(new_label_struct);
 
-	//Close Dialog
-	createLabel->close();
+	//Check if new labels information is not already used in labels_reg
+	bool valid_lbl = validate_newLabel(new_label_struct);
 
-	//Update Labels table
-	update_labelsTable();
+	if (valid_lbl)
+	{
+		//Assign ID
+		new_label_struct.ID = labelID_reg;
+		labelID_reg++;
+
+		//Save new label in labels register
+		labels_reg.push_back(new_label_struct);
+
+		//Close Dialog
+		createLabel->close();
+
+		//Update Labels table
+		update_labelsTable();
+	}	
 }
 
 void GTGenerator::cancelNewLabel()
@@ -239,15 +268,44 @@ void GTGenerator::initialize_labelsTable()
 	LabelsTable->setRowCount(0);
 
 	QStringList column_names;
-	column_names << "Label" << "Color";
+	column_names << "Name" << "Color";
 	LabelsTable->setHorizontalHeaderLabels(column_names);
 	LabelsTable->setColumnWidth(0, 270);
 
 	LabelsTable->verticalHeader()->setVisible(false);
 	LabelsTable->horizontalHeader()->setStretchLastSection(true);
+}
 
-	LabelsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-	LabelsTable->setSelectionMode(QAbstractItemView::SingleSelection);
+bool GTGenerator::validate_newLabel(label_info new_label)
+{
+	QMessageBox errorBox;
+	bool valid = true;
+
+	for (int i = 0; i < labels_reg.size(); i++)
+	{
+		//Validate color in labels reg
+		if (new_label.color == labels_reg[i].color)
+		{
+			errorBox.setWindowTitle("Error");
+			errorBox.setIcon(QMessageBox::Icon::Critical);
+			errorBox.setText("Label color already taken, please select another color");
+			errorBox.setDefaultButton(QMessageBox::Ok);
+			errorBox.exec();
+			valid = false;
+		}
+		//Validate name in labels reg
+		if (new_label.name == labels_reg[i].name)
+		{
+			errorBox.setWindowTitle("Error");
+			errorBox.setIcon(QMessageBox::Icon::Critical);
+			errorBox.setText("Label name already taken, please use another name");
+			errorBox.setDefaultButton(QMessageBox::Ok);
+			errorBox.exec();
+			valid = false;
+		}
+	}
+
+	return valid;
 }
 
 void GTGenerator::update_labelsTable()
@@ -256,20 +314,41 @@ void GTGenerator::update_labelsTable()
 	int newLabel_row = labels_reg.size()-1;
 	LabelsTable->setRowCount(newLabel_row+1);
 
-	//Input label name in table
-	std::cout << labels_reg[newLabel_row ].name.toUtf8().constData();
-	QTableWidgetItem * name_item = new QTableWidgetItem(labels_reg[newLabel_row ].name);
-	name_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-	LabelsTable->setItem(newLabel_row, 0, name_item);
+	for (int i = 0; i <= newLabel_row; i++)
+	{
+		//Input label name in table
+		QTableWidgetItem * name_item = new QTableWidgetItem(labels_reg[i].name);
+		name_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		LabelsTable->setItem(i, 0, name_item);
 
-	//Draw square with the selected label color
-	QWidget *pWidget = new QWidget();
-	QString s("background: #"
-		+ QString(labels_reg[newLabel_row].color.red() < 16 ? "0" : "") + QString::number(labels_reg[newLabel_row].color.red(), 16)
-		+ QString(labels_reg[newLabel_row].color.green() < 16 ? "0" : "") + QString::number(labels_reg[newLabel_row].color.green(), 16)
-		+ QString(labels_reg[newLabel_row].color.blue() < 16 ? "0" : "") + QString::number(labels_reg[newLabel_row].color.blue(), 16) + ";");
-	pWidget->setStyleSheet(s);
-	LabelsTable->setCellWidget(newLabel_row, 1, pWidget);
-
+		//Paint table cell with the selected label color
+		QWidget *pWidget = new QWidget();
+		QString s("background: #"
+			+ QString(labels_reg[i].color.red() < 16 ? "0" : "") + QString::number(labels_reg[i].color.red(), 16)
+			+ QString(labels_reg[i].color.green() < 16 ? "0" : "") + QString::number(labels_reg[i].color.green(), 16)
+			+ QString(labels_reg[i].color.blue() < 16 ? "0" : "") + QString::number(labels_reg[i].color.blue(), 16) + ";");
+		pWidget->setStyleSheet(s);
+		LabelsTable->setCellWidget(i, 1, pWidget);
+		QTableWidgetItem * color_item = new QTableWidgetItem();
+		color_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		LabelsTable->setItem(i, 1, color_item);
+	}
+	LabelsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+	LabelsTable->setSelectionMode(QAbstractItemView::SingleSelection);
 	LabelsTable->selectRow(newLabel_row);
+
+	//Get current label ID
+	currLabel_ID = labels_reg[LabelsTable->currentIndex().row()].ID;
+}
+
+void GTGenerator::currLabel_change(QTableWidgetItem *item)
+{
+	QTableWidget *LabelsTable = GTgui->labels_table;
+
+	//Get current label ID
+	currLabel_ID = labels_reg[LabelsTable->currentIndex().row()].ID;
+
+	//Copy Labels variables to player widget
+	GTgui->GTplayerWidget->labels_reg = labels_reg;
+	GTgui->GTplayerWidget->currLabel_ID = currLabel_ID;
 }

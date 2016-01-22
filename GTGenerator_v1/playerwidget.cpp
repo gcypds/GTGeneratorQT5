@@ -18,6 +18,12 @@ GTplayerWidget(new Ui::playerWidget)
 	//Disable play button and slider until a video is loaded
 	GTplayerWidget->play_button->setEnabled(false);
 	GTplayerWidget->progres_slider->setEnabled(false);
+
+	//Initialize player as paused
+	play_state = false;
+	video_loaded = false;
+
+	GTplayerWidget->image_label->installEventFilter(this);
 }
 
 playerWidget::~playerWidget()
@@ -28,8 +34,12 @@ playerWidget::~playerWidget()
 void playerWidget::playerInitialization()
 {
 	//Initialize player variables
-	play_state = false;
 	frame_idx = 0;
+	video_loaded = true;
+
+	//Initialize play timer
+	playTimer = new QTimer(this);
+	playTimer->start(fps);
 
 	//Load play and pause icons
 	const QPixmap play_pixmap("D:/Documentos/VS-Codes/GTGeneratorQT5/GTGenerator_v1/Resources/play128.png");
@@ -42,14 +52,14 @@ void playerWidget::playerInitialization()
 	GTplayerWidget->progres_slider->setMaximum(imgSeq_list.size());
 
 	//Display first frame
-	displayFrame();
+	readFrame();
 
 	//Enable play button and slider
 	GTplayerWidget->play_button->setEnabled(true);
 	GTplayerWidget->progres_slider->setEnabled(true);
 
-	//Initialize slider_mov flag 
-	slider_mov = false;
+	//Initialize ROI drawing state
+	mouse_ROIstate = 0;
 }
 
 void playerWidget::on_playButton_clicked()
@@ -58,11 +68,10 @@ void playerWidget::on_playButton_clicked()
 	if (!play_state)
 	{
 		//Set player timer
-		playTimer = new QTimer(this);
 		playTimer->start(fps);
 
-		//Connect timer with displayFrame function
-		connect(playTimer, SIGNAL(timeout()), this, SLOT(displayFrame()));
+		//Connect timer with readFrame function
+		connect(playTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
 
 		//Change player state to "play"
 		play_state = true;
@@ -84,36 +93,45 @@ void playerWidget::on_playButton_clicked()
 	}
 }
 
-void playerWidget::displayFrame()
+void playerWidget::readFrame()
 {
-	OpenCVProcessor player_openCVProcessor = OpenCVProcessor();
-
 	if (frame_idx < imgSeq_list.size())
 	{
-		//Read current frame
+		//Read frame
 		frame_name = imgSeq_list.at(frame_idx);
 		frame_path = imgSeq_path + "/" + frame_name.toUtf8().constData();
 		currFrame = cv::imread(frame_path);
 
-		//Convert cv::Mat to Qpixmap 
-		Qpix_currFrame = player_openCVProcessor.cvMatToQPixmap(currFrame);
+		//Display frame
+		displayFrame(currFrame);
 
-		//Display image
-		GTplayerWidget->image_label->setPixmap(Qpix_currFrame);
-		GTplayerWidget->image_label->setScaledContents(true);
-
-		//Increase frame index and progress slider
-		if (!slider_mov)
-		{
-			frame_idx++;
-			GTplayerWidget->progres_slider->setValue(frame_idx);
-		}
+		//Increase index and move slider
+		frame_idx++;
+		GTplayerWidget->progres_slider->setValue(frame_idx);
 	}
+}
+
+void playerWidget::displayFrame(cv::Mat Frame)
+{
+	OpenCVProcessor player_openCVProcessor = OpenCVProcessor();
+	
+	//PLOT ROIS FROM XML HERE-----
+
+
+	//----------------------------
+
+	//Convert cv::Mat to Qpixmap 
+	Qpix_currFrame = player_openCVProcessor.cvMatToQPixmap(Frame);
+
+	//Display image
+	GTplayerWidget->image_label->setPixmap(Qpix_currFrame);
+	GTplayerWidget->image_label->setScaledContents(true);
+	scaledFrame_width = GTplayerWidget->image_label->width();
+	scaledFrame_height = GTplayerWidget->image_label->height();
 }
 
 void playerWidget::on_progressSlider_moved(int val)
 {
-	
 	//Get slider value set by user
 	frame_idx = val;
 
@@ -130,6 +148,123 @@ void playerWidget::on_progressSlider_moved(int val)
 void playerWidget::on_progressSlider_released()
 {
 	//Display frame when slider is released
-	displayFrame();
+	readFrame();
+	displayFrame(currFrame);
 }
 
+bool playerWidget::eventFilter(QObject *obj, QEvent *event)
+{
+	bool event_flag = false;
+
+	//If video is loaded hear mouse events
+	if (video_loaded)
+	{
+		//-------Mouse click on video-------
+		if (event->type() == QEvent::MouseButtonPress)
+		{
+			//If mouse clicked and video is playing -> pause video
+			if (play_state)
+			{
+				//Stop timer
+				playTimer->stop();
+
+				//Change player state to "pause"
+				play_state = false;
+
+				//Change icon to "pause"
+				GTplayerWidget->play_button->setIcon(*playIcon);
+			}
+			//If mouse clicked and video is paused -> start to draw ROI
+			else
+			{
+				//Get mouse click coordinates
+				const QMouseEvent* const me = static_cast<const QMouseEvent*>(event);
+				ROI_left = me->pos().x();
+				ROI_up = me->pos().y();
+
+				//Scale coordinates from widget size to frame size
+				ROI_left = int(floor(double(ROI_left)*(double(currFrame.size().width) / double(scaledFrame_width))));
+				ROI_up = int(floor(double(ROI_up)*(double(currFrame.size().height) / double(scaledFrame_height))));
+
+				//Change mouse_ROIstate to "being drawn"
+				mouse_ROIstate = 1;
+			}
+			event_flag = true;
+		}
+		//-------Mouse moved on video-------
+		if (event->type() == QEvent::MouseMove)
+		{
+			//Continue drawing ROI
+			if (mouse_ROIstate == 1)
+			{
+				//Get mouse coordinates
+				const QMouseEvent* const me = static_cast<const QMouseEvent*>(event);
+				ROI_right = me->pos().x();
+				ROI_down = me->pos().y();	
+
+				//Scale coordinates from widget size to frame size
+				ROI_right = int(floor(double(ROI_right)*(double(currFrame.size().width) / double(scaledFrame_width))));
+				ROI_down = int(floor(double(ROI_down)*(double(currFrame.size().height) / double(scaledFrame_height))));
+
+				//Get Label color
+				int lbl_idx = labelID_search(currLabel_ID, labels_reg);
+				QColor currLbl_color = labels_reg[lbl_idx].color;
+
+				//Draw ROI in frame
+				cv::Mat Frame_ROI = currFrame.clone();
+				cv::Scalar CVcurrLbl_color = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
+				cv::rectangle(Frame_ROI, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 2);
+
+				//Display frame 
+				displayFrame(Frame_ROI);
+			}
+		}
+		//-------Mouse released on video-------
+		if (event->type() == QEvent::MouseButtonRelease)
+		{
+			//Continue drawing ROI
+			if (mouse_ROIstate == 1)
+			{
+				//Get mouse coordinates
+				const QMouseEvent* const me = static_cast<const QMouseEvent*>(event);
+				ROI_right = me->pos().x();
+				ROI_down = me->pos().y();
+
+				//Scale coordinates from widget size to frame size
+				ROI_right = int(floor(double(ROI_right)*(double(currFrame.size().width) / double(scaledFrame_width))));
+				ROI_down = int(floor(double(ROI_down)*(double(currFrame.size().height) / double(scaledFrame_height))));
+
+				//Get Label color
+				int lbl_idx = labelID_search(currLabel_ID, labels_reg);
+				QColor currLbl_color = labels_reg[lbl_idx].color;
+
+				//Draw ROI in frame
+				cv::Mat Frame_ROI = currFrame.clone();
+				cv::Scalar CVcurrLbl_color = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
+				cv::rectangle(Frame_ROI, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 2);
+
+				//Display frame 
+				displayFrame(Frame_ROI);
+
+				//Change mouse_ROIstate to drawn
+				mouse_ROIstate = 2;
+			}
+		}
+	}	
+	return event_flag;
+}
+
+int playerWidget::labelID_search(int ID, QVector<label_info> labels_reg)
+{
+	int lbl_idx;
+
+	for (int i = 0; i < labels_reg.size(); i++)
+	{
+		if (labels_reg[i].ID == ID)
+		{
+			lbl_idx = i;
+			break;
+		}			
+	}
+	return lbl_idx;
+}

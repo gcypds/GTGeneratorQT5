@@ -18,11 +18,14 @@
 #include "opencvprocessor.h"
 #include "playerwidget.h"
 
-struct label_info
-{
-	QString name;
-	QColor color;
-};
+//Global structs
+//struct label_info
+//{
+//	QString name;
+//	QColor color;
+//	int ID;
+//};
+//-----------------
 
 class GTGenerator : public QMainWindow
 {
@@ -32,12 +35,14 @@ public:
 	GTGenerator(QWidget *parent = 0);
 
 	~GTGenerator();
-		
+	
+	//Global variables
 	int fps;
 	string imgSeq_path;
 	QStringList imgSeq_list;
-
 	QVector<label_info> labels_reg;		//Labels register
+	int currLabel_ID;
+	//----------------
 
 private:
 
@@ -49,6 +54,8 @@ private:
 	void update_labelsTable();
 
 	void initialize_labelsTable();
+
+	bool validate_newLabel(label_info new_label);
 
 	//Variables---------------
 
@@ -76,6 +83,7 @@ private:
 	//Create label information
 	QColor label_color;
 	QString label_name;
+	int labelID_reg;
 
 public slots:
 
@@ -89,6 +97,8 @@ void loadSource();
 
 void acceptSource_convertVideo();
 
+void cancel_newProject();
+
 //Create label slots
 
 void showCreateLabelDialog();
@@ -98,6 +108,8 @@ void selectLabelColor();
 void acceptNewLabel();
 
 void cancelNewLabel();
+
+void currLabel_change(QTableWidgetItem *item);
 
 };
 
