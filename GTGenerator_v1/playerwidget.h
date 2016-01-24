@@ -3,20 +3,14 @@
 
 #include <qwidget.h>
 #include "ui_playerWidget.h"
+#include "GTProject_data.h"
 #include <iostream>
 #include "opencvprocessor.h"
 #include <qtimer.h>
 #include <QGraphicsScene>
 #include <QMouseEvent>
+#include "roi_interpolator.h"
 
-//Global structs
-struct label_info
-{
-	QString name;
-	QColor color;
-	int ID;
-};
-//-----------------
 
 class playerWidget : public QWidget
 {
@@ -29,27 +23,19 @@ public:
 
 	void playerInitialization();
 
-	//Global variables
-	bool play_state;	//true:play, false:pause
-	int fps;
-	string imgSeq_path; 
-	QStringList imgSeq_list;
-	QVector<label_info> labels_reg;		//Labels register
-	int currLabel_ID;
-	//-----------------
-
 	//playerWidget Gui
 	Ui::playerWidget *GTplayerWidget;
 
 private:
+	//Functions
 	void displayFrame(cv::Mat Frame);
 
-	//GLobal functions
-	int labelID_search(int ID, QVector<label_info> labels_reg);
-	//-----------------
+	void createKROI();
+
+	//Project global variables
+	GTProject_data *data;
 
 	//Frame info
-	int frame_idx;
 	cv::Mat currFrame;
 	QImage Qim_currFrame;
 	QPixmap Qpix_currFrame;
@@ -60,6 +46,7 @@ private:
 	//Timer
 	QTimer *playTimer;
 
+	bool play_state;	//true:play, false:pause
 	bool video_loaded;
 
 	//Play pause icons

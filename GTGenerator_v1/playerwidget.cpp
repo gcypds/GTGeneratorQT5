@@ -5,7 +5,7 @@ QWidget(parent),
 GTplayerWidget(new Ui::playerWidget)
 {
 	GTplayerWidget->setupUi(this);
-	
+
 	//Connect when play button is clicked
 	connect(GTplayerWidget->play_button, SIGNAL(clicked()), this, SLOT(on_playButton_clicked()));
 
@@ -23,7 +23,11 @@ GTplayerWidget(new Ui::playerWidget)
 	play_state = false;
 	video_loaded = false;
 
+	//Tagging variables and functions------------------------
 	GTplayerWidget->image_label->installEventFilter(this);
+
+	//Project global variables
+	data = GTProject_data::Instance();
 }
 
 playerWidget::~playerWidget()
@@ -34,12 +38,12 @@ playerWidget::~playerWidget()
 void playerWidget::playerInitialization()
 {
 	//Initialize player variables
-	frame_idx = 0;
+	data->frame_idx = 0;
 	video_loaded = true;
 
 	//Initialize play timer
 	playTimer = new QTimer(this);
-	playTimer->start(fps);
+	playTimer->start(data->fps);
 
 	//Load play and pause icons
 	const QPixmap play_pixmap("D:/Documentos/VS-Codes/GTGeneratorQT5/GTGenerator_v1/Resources/play128.png");
@@ -49,7 +53,7 @@ void playerWidget::playerInitialization()
 
 	//Set slider according image sequence length
 	GTplayerWidget->progres_slider->setMinimum(0);
-	GTplayerWidget->progres_slider->setMaximum(imgSeq_list.size());
+	GTplayerWidget->progres_slider->setMaximum(data->imgSeq_list.size());
 
 	//Display first frame
 	readFrame();
@@ -68,7 +72,7 @@ void playerWidget::on_playButton_clicked()
 	if (!play_state)
 	{
 		//Set player timer
-		playTimer->start(fps);
+		playTimer->start(data->fps);
 
 		//Connect timer with readFrame function
 		connect(playTimer, SIGNAL(timeout()), this, SLOT(readFrame()));
@@ -95,19 +99,19 @@ void playerWidget::on_playButton_clicked()
 
 void playerWidget::readFrame()
 {
-	if (frame_idx < imgSeq_list.size())
+	if (data->frame_idx < data->imgSeq_list.size())
 	{
 		//Read frame
-		frame_name = imgSeq_list.at(frame_idx);
-		frame_path = imgSeq_path + "/" + frame_name.toUtf8().constData();
+		frame_name = data->imgSeq_list.at(data->frame_idx);
+		frame_path = data->imgSeq_path + "/" + frame_name.toUtf8().constData();
 		currFrame = cv::imread(frame_path);
 
 		//Display frame
 		displayFrame(currFrame);
 
 		//Increase index and move slider
-		frame_idx++;
-		GTplayerWidget->progres_slider->setValue(frame_idx);
+		data->frame_idx++;
+		GTplayerWidget->progres_slider->setValue(data->frame_idx);
 	}
 }
 
@@ -133,7 +137,7 @@ void playerWidget::displayFrame(cv::Mat Frame)
 void playerWidget::on_progressSlider_moved(int val)
 {
 	//Get slider value set by user
-	frame_idx = val;
+	data->frame_idx = val;
 
 	//Stop timer
 	playTimer->stop();
@@ -207,8 +211,8 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				ROI_down = int(floor(double(ROI_down)*(double(currFrame.size().height) / double(scaledFrame_height))));
 
 				//Get Label color
-				int lbl_idx = labelID_search(currLabel_ID, labels_reg);
-				QColor currLbl_color = labels_reg[lbl_idx].color;
+				int lbl_idx = labelID_search(data->currLabel_ID, data->labels_reg);
+				QColor currLbl_color = data->labels_reg[lbl_idx].color;
 
 				//Draw ROI in frame
 				cv::Mat Frame_ROI = currFrame.clone();
@@ -235,8 +239,8 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				ROI_down = int(floor(double(ROI_down)*(double(currFrame.size().height) / double(scaledFrame_height))));
 
 				//Get Label color
-				int lbl_idx = labelID_search(currLabel_ID, labels_reg);
-				QColor currLbl_color = labels_reg[lbl_idx].color;
+				int lbl_idx = labelID_search(data->currLabel_ID, data->labels_reg);
+				QColor currLbl_color = data->labels_reg[lbl_idx].color;
 
 				//Draw ROI in frame
 				cv::Mat Frame_ROI = currFrame.clone();
@@ -248,23 +252,39 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 
 				//Change mouse_ROIstate to drawn
 				mouse_ROIstate = 2;
+
+				//Create new Key ROI
+				createKROI();
 			}
 		}
 	}	
 	return event_flag;
 }
 
-int playerWidget::labelID_search(int ID, QVector<label_info> labels_reg)
+void playerWidget::createKROI()
 {
-	int lbl_idx;
+	//Set ROI information
+	data->newKROI.empty = false;
+	data->newKROI.top = ROI_up;
+	data->newKROI.bot = ROI_down;
+	data->newKROI.left = ROI_left;
+	data->newKROI.right = ROI_right;
+	data->newKROI.w = ROI_right-ROI_left;
+	data->newKROI.h = ROI_down - ROI_up;
+	data->newKROI.frame = data->frame_idx;
 
-	for (int i = 0; i < labels_reg.size(); i++)
-	{
-		if (labels_reg[i].ID == ID)
-		{
-			lbl_idx = i;
-			break;
-		}			
-	}
-	return lbl_idx;
+	//Set ROI states
+	QVector<int> states;
+	states.push_back(ROI_left);
+	states.push_back(ROI_up);
+	states.push_back(data->newKROI.w);
+	states.push_back(data->newKROI.h);
+	data->newKROI.states = states;
+
+	//Increase current ROI ID
+	data->currROI_ID++;
+
+	//Reset mouse_ROIstate to ROI not drawn
+	mouse_ROIstate = 0;
 }
+

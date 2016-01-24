@@ -17,15 +17,9 @@
 
 #include "opencvprocessor.h"
 #include "playerwidget.h"
+#include "GTProject_data.h"
+#include "roi_interpolator.h"
 
-//Global structs
-//struct label_info
-//{
-//	QString name;
-//	QColor color;
-//	int ID;
-//};
-//-----------------
 
 class GTGenerator : public QMainWindow
 {
@@ -35,14 +29,6 @@ public:
 	GTGenerator(QWidget *parent = 0);
 
 	~GTGenerator();
-	
-	//Global variables
-	int fps;
-	string imgSeq_path;
-	QStringList imgSeq_list;
-	QVector<label_info> labels_reg;		//Labels register
-	int currLabel_ID;
-	//----------------
 
 private:
 
@@ -62,6 +48,9 @@ private:
 	//Main GT Gui
 	Ui::GTGeneratorClass ui;
 	Ui_GTGeneratorClass * GTgui;
+
+	//Project global variables
+	GTProject_data *data;	
 
 	//New project Dialog
 	QDialog *newProject;

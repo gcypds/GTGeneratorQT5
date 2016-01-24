@@ -1,13 +1,14 @@
 #include "gtgenerator.h"
 
-#define Default_FPS 15
-
 GTGenerator::GTGenerator(QWidget *parent)
 	: QMainWindow(parent)
 {
 	//Create Gui variable
 	GTgui = new Ui_GTGeneratorClass();
 	GTgui->setupUi(this);
+
+	//Project global variables
+	data = GTProject_data::Instance();
 
 	//------------------------------------------------------------------------------------
 	//New project Dialog slots and initialization
@@ -55,8 +56,8 @@ GTGenerator::GTGenerator(QWidget *parent)
 	//Initialize labels table
 	initialize_labelsTable();
 
-	//Initialize labels ID register
-	labelID_reg = 0;
+	//Initialize labels ID register (0 default label)
+	labelID_reg = 1;
 
 	//------------------------------------------------------------------------------------
 	//Labels table interaction functions
@@ -131,9 +132,8 @@ void GTGenerator::load_imageSource()
 		if (!files.isEmpty())
 		{
 			ui_newProject->sourcePath_edit->setText(sourcePath);
-			fps = Default_FPS;
-			imgSeq_path = sourcePath.toUtf8().constData();
-			imgSeq_list = files;
+			data->imgSeq_path = sourcePath.toUtf8().constData();
+			data->imgSeq_list = files;
 		}
 		else
 		{
@@ -167,20 +167,15 @@ void GTGenerator::acceptSource_convertVideo()
 		progressDialog = new QProgressDialog(this);
 		progressDialog->setFixedSize(QSize(400, 100));
 		openCVProcessor.setProgressDialog(progressDialog);
-		fps = openCVProcessor.saveFramesFromVideo(sourcePath, videoFramesDir.path());
+		data->fps = openCVProcessor.saveFramesFromVideo(sourcePath, videoFramesDir.path());
 
 		videoFramesDir.setFilter(QDir::Files | QDir::NoSymLinks);
-		imgSeq_path = QimgSeq_path.toUtf8().constData();
+		data->imgSeq_path = QimgSeq_path.toUtf8().constData();
 
 		QStringList filters;
 		filters << "*.png" << "*.jpg" << "*.jpeg";
-		imgSeq_list = videoFramesDir.entryList(filters, QDir::Files | QDir::NoSymLinks);
+		data->imgSeq_list = videoFramesDir.entryList(filters, QDir::Files | QDir::NoSymLinks);
 	}	
-
-	//Copy variables to playerWidget class
-	GTgui->GTplayerWidget->fps = fps;
-	GTgui->GTplayerWidget->imgSeq_path = imgSeq_path;
-	GTgui->GTplayerWidget->imgSeq_list = imgSeq_list;
 
 	//Initialize player
 	GTgui->GTplayerWidget->playerInitialization();
@@ -245,7 +240,7 @@ void GTGenerator::acceptNewLabel()
 		labelID_reg++;
 
 		//Save new label in labels register
-		labels_reg.push_back(new_label_struct);
+		data->labels_reg.push_back(new_label_struct);
 
 		//Close Dialog
 		createLabel->close();
@@ -281,10 +276,10 @@ bool GTGenerator::validate_newLabel(label_info new_label)
 	QMessageBox errorBox;
 	bool valid = true;
 
-	for (int i = 0; i < labels_reg.size(); i++)
+	for (int i = 0; i < data->labels_reg.size(); i++)
 	{
 		//Validate color in labels reg
-		if (new_label.color == labels_reg[i].color)
+		if (new_label.color == data->labels_reg[i].color)
 		{
 			errorBox.setWindowTitle("Error");
 			errorBox.setIcon(QMessageBox::Icon::Critical);
@@ -294,7 +289,7 @@ bool GTGenerator::validate_newLabel(label_info new_label)
 			valid = false;
 		}
 		//Validate name in labels reg
-		if (new_label.name == labels_reg[i].name)
+		if (new_label.name == data->labels_reg[i].name)
 		{
 			errorBox.setWindowTitle("Error");
 			errorBox.setIcon(QMessageBox::Icon::Critical);
@@ -311,22 +306,22 @@ bool GTGenerator::validate_newLabel(label_info new_label)
 void GTGenerator::update_labelsTable()
 {
 	QTableWidget *LabelsTable = GTgui->labels_table;
-	int newLabel_row = labels_reg.size()-1;
+	int newLabel_row = data->labels_reg.size() - 2;
 	LabelsTable->setRowCount(newLabel_row+1);
 
 	for (int i = 0; i <= newLabel_row; i++)
 	{
 		//Input label name in table
-		QTableWidgetItem * name_item = new QTableWidgetItem(labels_reg[i].name);
+		QTableWidgetItem * name_item = new QTableWidgetItem(data->labels_reg[i+1].name);
 		name_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		LabelsTable->setItem(i, 0, name_item);
 
 		//Paint table cell with the selected label color
 		QWidget *pWidget = new QWidget();
 		QString s("background: #"
-			+ QString(labels_reg[i].color.red() < 16 ? "0" : "") + QString::number(labels_reg[i].color.red(), 16)
-			+ QString(labels_reg[i].color.green() < 16 ? "0" : "") + QString::number(labels_reg[i].color.green(), 16)
-			+ QString(labels_reg[i].color.blue() < 16 ? "0" : "") + QString::number(labels_reg[i].color.blue(), 16) + ";");
+			+ QString(data->labels_reg[i + 1].color.red() < 16 ? "0" : "") + QString::number(data->labels_reg[i + 1].color.red(), 16)
+			+ QString(data->labels_reg[i + 1].color.green() < 16 ? "0" : "") + QString::number(data->labels_reg[i + 1].color.green(), 16)
+			+ QString(data->labels_reg[i + 1].color.blue() < 16 ? "0" : "") + QString::number(data->labels_reg[i + 1].color.blue(), 16) + ";");
 		pWidget->setStyleSheet(s);
 		LabelsTable->setCellWidget(i, 1, pWidget);
 		QTableWidgetItem * color_item = new QTableWidgetItem();
@@ -338,7 +333,7 @@ void GTGenerator::update_labelsTable()
 	LabelsTable->selectRow(newLabel_row);
 
 	//Get current label ID
-	currLabel_ID = labels_reg[LabelsTable->currentIndex().row()].ID;
+	data->currLabel_ID = data->labels_reg[LabelsTable->currentIndex().row()].ID;
 }
 
 void GTGenerator::currLabel_change(QTableWidgetItem *item)
@@ -346,9 +341,5 @@ void GTGenerator::currLabel_change(QTableWidgetItem *item)
 	QTableWidget *LabelsTable = GTgui->labels_table;
 
 	//Get current label ID
-	currLabel_ID = labels_reg[LabelsTable->currentIndex().row()].ID;
-
-	//Copy Labels variables to player widget
-	GTgui->GTplayerWidget->labels_reg = labels_reg;
-	GTgui->GTplayerWidget->currLabel_ID = currLabel_ID;
+	data->currLabel_ID = data->labels_reg[LabelsTable->currentIndex().row()+1].ID;
 }

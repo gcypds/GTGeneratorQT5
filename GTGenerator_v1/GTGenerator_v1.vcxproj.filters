@@ -68,6 +68,12 @@
     <ClCompile Include="playerwidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GTProject_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="roi_interpolator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="gtgenerator.h">
@@ -97,6 +103,9 @@
     <CustomBuild Include="createLabel.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="roi_interpolator.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_gtgenerator.h">
@@ -113,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_createLabel.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GTProject_data.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

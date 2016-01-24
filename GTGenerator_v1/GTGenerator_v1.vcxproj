@@ -174,9 +174,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="gtgenerator.cpp" />
+    <ClCompile Include="GTProject_data.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="opencvprocessor.cpp" />
     <ClCompile Include="playerwidget.cpp" />
+    <ClCompile Include="roi_interpolator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="gtgenerator.h">
@@ -224,6 +226,33 @@
     <ClInclude Include="GeneratedFiles\ui_newProject.h" />
     <ClInclude Include="GeneratedFiles\ui_playerWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_saveProject.h" />
+    <ClInclude Include="GTProject_data.h" />
+    <CustomBuild Include="roi_interpolator.h">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Command>
+    </CustomBuild>
     <CustomBuild Include="playerwidget.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing playerwidget.h...</Message>
