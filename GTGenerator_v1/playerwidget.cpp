@@ -28,6 +28,9 @@ GTplayerWidget(new Ui::playerWidget)
 
 	//Project global variables
 	data = GTProject_data::Instance();
+
+	//Create ROI interpolator object
+	ROI_interp = new ROI_interpolator();
 }
 
 playerWidget::~playerWidget()
@@ -40,6 +43,7 @@ void playerWidget::playerInitialization()
 	//Initialize player variables
 	data->frame_idx = 0;
 	video_loaded = true;
+	data->video_length = data->imgSeq_list.size();
 
 	//Initialize play timer
 	playTimer = new QTimer(this);
@@ -120,7 +124,8 @@ void playerWidget::displayFrame(cv::Mat Frame)
 	OpenCVProcessor player_openCVProcessor = OpenCVProcessor();
 	
 	//PLOT ROIS FROM XML HERE-----
-
+	if (mouse_ROIstate == 0)
+		drawROI_currFrame();
 
 	//----------------------------
 
@@ -181,17 +186,22 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 			//If mouse clicked and video is paused -> start to draw ROI
 			else
 			{
-				//Get mouse click coordinates
-				const QMouseEvent* const me = static_cast<const QMouseEvent*>(event);
-				ROI_left = me->pos().x();
-				ROI_up = me->pos().y();
+				if (mouse_ROIstate == 0)
+				{
+					std::cout << std::endl << "ams:" << mouse_ROIstate;
 
-				//Scale coordinates from widget size to frame size
-				ROI_left = int(floor(double(ROI_left)*(double(currFrame.size().width) / double(scaledFrame_width))));
-				ROI_up = int(floor(double(ROI_up)*(double(currFrame.size().height) / double(scaledFrame_height))));
+					//Get mouse click coordinates
+					const QMouseEvent* const me = static_cast<const QMouseEvent*>(event);
+					ROI_left = me->pos().x();
+					ROI_up = me->pos().y();
 
-				//Change mouse_ROIstate to "being drawn"
-				mouse_ROIstate = 1;
+					//Scale coordinates from widget size to frame size
+					ROI_left = int(floor(double(ROI_left)*(double(currFrame.size().width) / double(scaledFrame_width))));
+					ROI_up = int(floor(double(ROI_up)*(double(currFrame.size().height) / double(scaledFrame_height))));
+
+					//Change mouse_ROIstate to "being drawn"
+					mouse_ROIstate = 1;
+				}				
 			}
 			event_flag = true;
 		}
@@ -213,6 +223,8 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				//Get Label color
 				int lbl_idx = labelID_search(data->currLabel_ID, data->labels_reg);
 				QColor currLbl_color = data->labels_reg[lbl_idx].color;
+
+				std::cout << std::endl << "bms:" << mouse_ROIstate << " lbl:" << data->currLabel_ID<< " lbl_idx:"<< lbl_idx;
 
 				//Draw ROI in frame
 				cv::Mat Frame_ROI = currFrame.clone();
@@ -253,8 +265,13 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				//Change mouse_ROIstate to drawn
 				mouse_ROIstate = 2;
 
+				std::cout << std::endl << "cms:" << mouse_ROIstate;
+
 				//Create new Key ROI
 				createKROI();
+
+				std::cout << std::endl << "dms:" << mouse_ROIstate;
+				std::cout << std::endl << "reg:" << data->ROIs_reg.size();
 			}
 		}
 	}	
@@ -286,5 +303,39 @@ void playerWidget::createKROI()
 
 	//Reset mouse_ROIstate to ROI not drawn
 	mouse_ROIstate = 0;
+
+	//Register new ROI and interpolate
+	ROI_interp->interpolateROI();
+}
+
+void playerWidget::drawROI_currFrame()
+{
+	roi_info ROIcurrFrame;
+	cv::Scalar CVcurrLbl_color; 
+	QColor currLbl_color;
+	label_info currLbl;
+
+
+	//Draw ROIs of current frame
+	for (int i = 0; i < data->ROIs_reg.size(); i++)
+	{
+		//Get ROI i for frame_idx
+		ROIcurrFrame = data->ROIs_reg[i].frameROI_info[data->frame_idx];
+
+		if (!ROIcurrFrame.empty)
+		{
+			std::cout << std::endl << "ROI:" << i << " lbl:" << data->ROIs_reg[i].lbl_ID;
+
+			//Get label for ROI i
+			currLbl = data->labels_reg[data->ROIs_reg[i].lbl_ID];
+
+			//Get label color for ROI i
+			currLbl_color = currLbl.color;
+			CVcurrLbl_color  = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
+
+			//Draw ROI i in current frame
+			cv::rectangle(currFrame, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 1);
+		}
+	}
 }
 

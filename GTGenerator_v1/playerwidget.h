@@ -12,6 +12,7 @@
 #include "roi_interpolator.h"
 
 
+
 class playerWidget : public QWidget
 {
 	Q_OBJECT
@@ -31,6 +32,8 @@ private:
 	void displayFrame(cv::Mat Frame);
 
 	void createKROI();
+
+	void drawROI_currFrame();
 
 	//Project global variables
 	GTProject_data *data;
@@ -61,7 +64,9 @@ private:
 	int mouse_ROIstate;	//0=ROI not drawn, 1=ROI being drawn, 2=ROI drawn
 
 	int scaledFrame_width;
-	int scaledFrame_height;
+	int scaledFrame_height;	
+	
+	ROI_interpolator *ROI_interp;		//ROI registering and interpolation
 	
 protected:
 	//Tagging functions-----------

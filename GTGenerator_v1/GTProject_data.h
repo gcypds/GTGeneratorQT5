@@ -58,6 +58,7 @@ public:
 	roi_info newKROI;					//New Key ROI
 
 	int frame_idx;	
+	int video_length;
 	
 private:
 

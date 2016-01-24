@@ -5,19 +5,11 @@ ROI_interpolator::ROI_interpolator()
 {
 	//Project global variables
 	data = GTProject_data::Instance();
-
-	NROI = 0;
 }
 
 ROI_interpolator::~ROI_interpolator()
 {
 
-}
-
-void ROI_interpolator::addNewROI()
-{
-	//ROI interpolation
-	interpolateROI();
 }
 
 void ROI_interpolator::interpolateROI()
@@ -35,7 +27,6 @@ void ROI_interpolator::interpolateROI()
 		newKeyROI.frameROI_info = newKeyROI_reg;
 
 		data->KeyROIs_reg.push_back(newKeyROI);
-		NROI++;
 	}
 
 	roi_info KROI_prev, KROI_next;
@@ -140,17 +131,21 @@ void ROI_interpolator::interpolation(roi_info prev, roi_info curr, roi_info next
 	//Replicate input states until last
 	if (prev.states.size() == 0 && next.states.size() == 0)
 	{
-		for (int i = 0; i < vid_length; i++)
+		for (int i = 0; i < data->video_length; i++)
 		{
+			//New ROI to save at frame i
+			roi_info newROI;
+			newROI = data->newKROI;
+			newROI.frame = i;
+
 			if (i < data->frame_idx)
 			{
-				roi_info newROI;
 				newROI.empty = true;
 				interpROI_states.append(newROI);
 			}
 			else
-			{
-				interpROI_states.append(data->newKROI);
+			{				
+				interpROI_states.append(newROI);
 			}
 		}
 		//Save in global ROIs register for plotting
@@ -199,7 +194,7 @@ void ROI_interpolator::interpolation(roi_info prev, roi_info curr, roi_info next
 		else
 			lim_sup = next.frame;
 
-		for (int i = 0; i < vid_length; i++)
+		for (int i = 0; i < data->video_length; i++)
 		{
 			if (i > prev.frame && i < lim_sup)
 			{
@@ -280,7 +275,7 @@ void ROI_interpolator::interpolation(roi_info prev, roi_info curr, roi_info next
 		x1 = next.frame;
 		slope_h = double(y1 - y0) / double(x1 - x0);
 
-		for (int i = 0; i < vid_length; i++)
+		for (int i = 0; i < data->video_length; i++)
 		{
 			if (i >= curr.frame && i < next.frame)
 			{
