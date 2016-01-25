@@ -188,8 +188,6 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 			{
 				if (mouse_ROIstate == 0)
 				{
-					std::cout << std::endl << "ams:" << mouse_ROIstate;
-
 					//Get mouse click coordinates
 					const QMouseEvent* const me = static_cast<const QMouseEvent*>(event);
 					ROI_left = me->pos().x();
@@ -224,8 +222,6 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				int lbl_idx = labelID_search(data->currLabel_ID, data->labels_reg);
 				QColor currLbl_color = data->labels_reg[lbl_idx].color;
 
-				std::cout << std::endl << "bms:" << mouse_ROIstate << " lbl:" << data->currLabel_ID<< " lbl_idx:"<< lbl_idx;
-
 				//Draw ROI in frame
 				cv::Mat Frame_ROI = currFrame.clone();
 				cv::Scalar CVcurrLbl_color = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
@@ -255,23 +251,17 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				QColor currLbl_color = data->labels_reg[lbl_idx].color;
 
 				//Draw ROI in frame
-				cv::Mat Frame_ROI = currFrame.clone();
 				cv::Scalar CVcurrLbl_color = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
-				cv::rectangle(Frame_ROI, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 2);
+				cv::rectangle(currFrame, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 2);
 
 				//Display frame 
-				displayFrame(Frame_ROI);
+				displayFrame(currFrame);
 
 				//Change mouse_ROIstate to drawn
 				mouse_ROIstate = 2;
 
-				std::cout << std::endl << "cms:" << mouse_ROIstate;
-
 				//Create new Key ROI
 				createKROI();
-
-				std::cout << std::endl << "dms:" << mouse_ROIstate;
-				std::cout << std::endl << "reg:" << data->ROIs_reg.size();
 			}
 		}
 	}	
@@ -324,8 +314,6 @@ void playerWidget::drawROI_currFrame()
 
 		if (!ROIcurrFrame.empty)
 		{
-			std::cout << std::endl << "ROI:" << i << " lbl:" << data->ROIs_reg[i].lbl_ID;
-
 			//Get label for ROI i
 			currLbl = data->labels_reg[data->ROIs_reg[i].lbl_ID];
 
@@ -334,7 +322,7 @@ void playerWidget::drawROI_currFrame()
 			CVcurrLbl_color  = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
 
 			//Draw ROI i in current frame
-			cv::rectangle(currFrame, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 1);
+			cv::rectangle(currFrame, cv::Point(ROIcurrFrame.left, ROIcurrFrame.top), cv::Point(ROIcurrFrame.right, ROIcurrFrame.bot), CVcurrLbl_color, 1);
 		}
 	}
 }
