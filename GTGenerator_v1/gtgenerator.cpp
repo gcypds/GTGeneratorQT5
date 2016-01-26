@@ -34,7 +34,7 @@ GTGenerator::GTGenerator(QWidget *parent)
 	connect(ui_newProject->cancelNew_button, SIGNAL(clicked()), this, SLOT(cancel_newProject()));
 
 	//------------------------------------------------------------------------------------
-	//Create label Dialog slots and initialization
+	//Labels Dialog and table slots and initialization
 
 	//Create NewProject Dialog
 	createLabel = new QDialog(this);
@@ -59,10 +59,17 @@ GTGenerator::GTGenerator(QWidget *parent)
 	//Initialize labels ID register (0 default label)
 	labelID_reg = 1;
 
-	//------------------------------------------------------------------------------------
 	//Labels table interaction functions
-
 	connect(GTgui->labels_table, SIGNAL(itemClicked(QTableWidgetItem *)), this, SLOT(currLabel_change(QTableWidgetItem *)));
+
+	//------------------------------------------------------------------------------------
+	//ROIs table slots and initialization
+
+	//Copy to global variable
+	data->currFrame_ROIs = GTgui->ROIs_table;
+
+	//Initialize ROIs table
+	initialize_ROIsTable();	
 }
 
 GTGenerator::~GTGenerator()
@@ -343,3 +350,25 @@ void GTGenerator::currLabel_change(QTableWidgetItem *item)
 	//Get current label ID
 	data->currLabel_ID = data->labels_reg[LabelsTable->currentIndex().row()+1].ID;
 }
+
+void GTGenerator::initialize_ROIsTable()
+{
+	QTableWidget *ROIsTable = data->currFrame_ROIs;
+	ROIsTable->setColumnCount(6);
+	ROIsTable->setRowCount(0);
+
+	QStringList column_names;
+	column_names << "ID" << "Label" << "x" << "y" << "w" << "h";
+	ROIsTable->setHorizontalHeaderLabels(column_names);
+	ROIsTable->setColumnWidth(0, 50);
+	ROIsTable->setColumnWidth(1, 60);
+	ROIsTable->setColumnWidth(2, 55);
+	ROIsTable->setColumnWidth(3, 55);
+	ROIsTable->setColumnWidth(4, 55);
+	ROIsTable->setColumnWidth(5, 55);
+
+	ROIsTable->verticalHeader()->setVisible(false);
+	ROIsTable->horizontalHeader()->setStretchLastSection(true);
+
+}
+

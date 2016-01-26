@@ -113,7 +113,7 @@
           <property name="title">
            <string>Current frame ROIs</string>
           </property>
-          <widget class="QTableWidget" name="tableWidget">
+          <widget class="QTableWidget" name="ROIs_table">
            <property name="geometry">
             <rect>
              <x>10</x>
@@ -121,6 +121,49 @@
              <width>331</width>
              <height>131</height>
             </rect>
+           </property>
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>170</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>170</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>170</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectItems</enum>
            </property>
           </widget>
          </widget>

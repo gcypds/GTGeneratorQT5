@@ -37,9 +37,11 @@ private:
 
 	void load_imageSource();
 
+	void initialize_labelsTable();
+
 	void update_labelsTable();
 
-	void initialize_labelsTable();
+	void initialize_ROIsTable();
 
 	bool validate_newLabel(label_info new_label);
 

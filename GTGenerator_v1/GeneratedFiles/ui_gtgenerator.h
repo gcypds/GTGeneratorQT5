@@ -49,7 +49,7 @@ public:
     QTableWidget *labels_table;
     QPushButton *createLabel_button;
     QGroupBox *currentROI_group;
-    QTableWidget *tableWidget;
+    QTableWidget *ROIs_table;
     QGroupBox *ROIenhance_group;
     QWidget *verticalLayoutWidget_4;
     QVBoxLayout *verticalLayout_4;
@@ -176,9 +176,18 @@ public:
         currentROI_group->setSizePolicy(sizePolicy3);
         currentROI_group->setMinimumSize(QSize(300, 0));
         currentROI_group->setMaximumSize(QSize(350, 16777215));
-        tableWidget = new QTableWidget(currentROI_group);
-        tableWidget->setObjectName(QStringLiteral("tableWidget"));
-        tableWidget->setGeometry(QRect(10, 20, 331, 131));
+        ROIs_table = new QTableWidget(currentROI_group);
+        ROIs_table->setObjectName(QStringLiteral("ROIs_table"));
+        ROIs_table->setGeometry(QRect(10, 20, 331, 131));
+        QPalette palette;
+        QBrush brush(QColor(170, 0, 0, 255));
+        brush.setStyle(Qt::SolidPattern);
+        palette.setBrush(QPalette::Active, QPalette::Midlight, brush);
+        palette.setBrush(QPalette::Inactive, QPalette::Midlight, brush);
+        palette.setBrush(QPalette::Disabled, QPalette::Midlight, brush);
+        ROIs_table->setPalette(palette);
+        ROIs_table->setAutoFillBackground(false);
+        ROIs_table->setSelectionBehavior(QAbstractItemView::SelectItems);
 
         verticalLayout->addWidget(currentROI_group);
 

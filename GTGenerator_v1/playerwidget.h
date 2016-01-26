@@ -35,6 +35,14 @@ private:
 
 	void drawROI_currFrame();
 
+	bool ROIclicked_check(int x, int y);
+
+	void highlightSelected_ROI(int ROI_ID);
+
+	void update_ROIsTable();
+
+	void highlightRowTable(QTableWidget *Table, int row);
+
 	//Project global variables
 	GTProject_data *data;
 
@@ -61,6 +69,8 @@ private:
 	int ROI_down;
 	int ROI_left;
 	int ROI_right;
+	int ROI_width;
+	int ROI_height;
 	int mouse_ROIstate;	//0=ROI not drawn, 1=ROI being drawn, 2=ROI drawn
 
 	int scaledFrame_width;

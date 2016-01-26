@@ -62,6 +62,14 @@ void playerWidget::playerInitialization()
 	//Display first frame
 	readFrame();
 
+	//Set ROI selection threshold
+	data->ROIselection_thr_pix_w = int(ceil(data->ROIselection_thr*double(currFrame.size().width)));
+	data->ROIselection_thr_pix_h = int(ceil(data->ROIselection_thr*double(currFrame.size().height)));
+
+	//Set ROI minimum size thresholds
+	data->ROImin_w = int(ceil(data->ROIminsize_thr*double(currFrame.size().width)));
+	data->ROImin_h = int(ceil(data->ROIminsize_thr*double(currFrame.size().height)));
+
 	//Enable play button and slider
 	GTplayerWidget->play_button->setEnabled(true);
 	GTplayerWidget->progres_slider->setEnabled(true);
@@ -123,11 +131,12 @@ void playerWidget::displayFrame(cv::Mat Frame)
 {
 	OpenCVProcessor player_openCVProcessor = OpenCVProcessor();
 	
-	//PLOT ROIS FROM XML HERE-----
+	//Draw ROIs from register and update ROIs table
 	if (mouse_ROIstate == 0)
+	{
 		drawROI_currFrame();
-
-	//----------------------------
+		update_ROIsTable();
+	}
 
 	//Convert cv::Mat to Qpixmap 
 	Qpix_currFrame = player_openCVProcessor.cvMatToQPixmap(Frame);
@@ -197,8 +206,17 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 					ROI_left = int(floor(double(ROI_left)*(double(currFrame.size().width) / double(scaledFrame_width))));
 					ROI_up = int(floor(double(ROI_up)*(double(currFrame.size().height) / double(scaledFrame_height))));
 
-					//Change mouse_ROIstate to "being drawn"
-					mouse_ROIstate = 1;
+					data->ROI_selected = ROIclicked_check(ROI_left, ROI_up);
+
+					if (data->ROI_selected)
+					{
+						highlightSelected_ROI(data->currROI_ID);
+					}	
+					else
+					{
+						//Change mouse_ROIstate to "being drawn"
+						mouse_ROIstate = 1;
+					}
 				}				
 			}
 			event_flag = true;
@@ -246,22 +264,38 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				ROI_right = int(floor(double(ROI_right)*(double(currFrame.size().width) / double(scaledFrame_width))));
 				ROI_down = int(floor(double(ROI_down)*(double(currFrame.size().height) / double(scaledFrame_height))));
 
-				//Get Label color
-				int lbl_idx = labelID_search(data->currLabel_ID, data->labels_reg);
-				QColor currLbl_color = data->labels_reg[lbl_idx].color;
+				ROI_width = ROI_right - ROI_left;
+				ROI_height = ROI_down - ROI_up;
 
-				//Draw ROI in frame
-				cv::Scalar CVcurrLbl_color = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
-				cv::rectangle(currFrame, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 2);
+				//Draw and save ROI if it surpass minimum size
+				if (ROI_width >= data->ROImin_w && ROI_height >= data->ROImin_h)
+				{
+					//Get Label color
+					int lbl_idx = labelID_search(data->currLabel_ID, data->labels_reg);
+					QColor currLbl_color = data->labels_reg[lbl_idx].color;
 
-				//Display frame 
-				displayFrame(currFrame);
+					//Draw ROI in frame
+					cv::Mat Frame_ROI = currFrame.clone();
+					cv::Scalar CVcurrLbl_color = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
+					cv::rectangle(Frame_ROI, cv::Point(ROI_left, ROI_up), cv::Point(ROI_right, ROI_down), CVcurrLbl_color, 2);
 
-				//Change mouse_ROIstate to drawn
-				mouse_ROIstate = 2;
+					//Change mouse_ROIstate to drawn
+					mouse_ROIstate = 2;
 
-				//Create new Key ROI
-				createKROI();
+					//Create new Key ROI
+					createKROI();
+
+					//Display frame 
+					displayFrame(Frame_ROI);
+				}
+				else
+				{
+					//Change mouse_ROIstate to not drawn
+					mouse_ROIstate = 0;
+
+					//Display frame 
+					displayFrame(currFrame);
+				}
 			}
 		}
 	}	
@@ -276,8 +310,8 @@ void playerWidget::createKROI()
 	data->newKROI.bot = ROI_down;
 	data->newKROI.left = ROI_left;
 	data->newKROI.right = ROI_right;
-	data->newKROI.w = ROI_right-ROI_left;
-	data->newKROI.h = ROI_down - ROI_up;
+	data->newKROI.w = ROI_width;
+	data->newKROI.h = ROI_height;
 	data->newKROI.frame = data->frame_idx;
 
 	//Set ROI states
@@ -288,14 +322,14 @@ void playerWidget::createKROI()
 	states.push_back(data->newKROI.h);
 	data->newKROI.states = states;
 
-	//Increase current ROI ID
-	data->currROI_ID++;
-
 	//Reset mouse_ROIstate to ROI not drawn
 	mouse_ROIstate = 0;
 
+	//Increase current ROI ID
+	data->currROI_ID = data->ROIs_reg.size();
+
 	//Register new ROI and interpolate
-	ROI_interp->interpolateROI();
+	ROI_interp->interpolateROI();	
 }
 
 void playerWidget::drawROI_currFrame()
@@ -327,3 +361,139 @@ void playerWidget::drawROI_currFrame()
 	}
 }
 
+bool playerWidget::ROIclicked_check(int x, int y)
+{
+	roi_info ROIcurrFrame;
+
+	int thr_x = data->ROIselection_thr_pix_w;
+	int thr_y = data->ROIselection_thr_pix_h;
+
+	bool c_left, c_right, c_top, c_bot;
+	bool sel = false;
+
+	for (int i = 0; i < data->ROIs_reg.size(); i++)
+	{
+		//Get ROI i for frame_idx
+		ROIcurrFrame = data->ROIs_reg[i].frameROI_info[data->frame_idx];
+
+		if (!ROIcurrFrame.empty)
+		{
+			//Check if click coordinates are near to ROI boundaries
+			c_left = (x <= ROIcurrFrame.left + thr_x) && (x >= ROIcurrFrame.left - thr_x) && (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.top - thr_y);
+			c_right = (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.right - thr_x) && (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.top - thr_y);
+			c_top = (y <= ROIcurrFrame.top + thr_y) && (y >= ROIcurrFrame.top - thr_y) && (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.left - thr_x);
+			c_bot = (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.bot - thr_y) && (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.left - thr_x);
+
+			if (c_left || c_right || c_bot || c_top)
+			{
+				data->currROI_ID = data->ROIs_reg[i].ID;
+				sel = true;
+				highlightRowTable(data->currFrame_ROIs, i);
+				system("pause");
+				break;				
+			}
+		}
+	}
+	return sel;
+}
+
+void playerWidget::highlightSelected_ROI(int ROI_ID)
+{
+	//Get Label color
+	roi_info selROI = data->ROIs_reg[ROI_ID].frameROI_info[data->frame_idx];
+	int ROI_lblID = data->ROIs_reg[ROI_ID].lbl_ID;
+	QColor currLbl_color = data->labels_reg[ROI_lblID].color;
+
+	//Draw ROI in frame
+	cv::Mat Frame_ROI = currFrame.clone();
+	cv::Scalar CVcurrLbl_color = Scalar(currLbl_color.blue(), currLbl_color.green(), currLbl_color.red());
+	cv::rectangle(Frame_ROI, cv::Point(selROI.left, selROI.top), cv::Point(selROI.right, selROI.bot), CVcurrLbl_color, 2);
+
+	//Display frame 
+	displayFrame(Frame_ROI);
+}
+
+
+void playerWidget::update_ROIsTable()
+{
+	QTableWidget *ROIsTable = data->currFrame_ROIs;
+	
+	roi_register_info currROI_reg;
+	roi_info currROI;
+	QColor currLbl_color;
+	Scalar CVcurrLbl_color;
+	QTableWidgetItem *ROItable_item;
+
+	int NROI_frame = 0;
+
+	for (int i = 0; i < data->ROIs_reg.size(); i++)
+	{
+		currROI_reg = data->ROIs_reg[i];
+
+		//If not empty display ROI in table
+		if (!currROI_reg.frameROI_info[data->frame_idx].empty)
+		{
+			//Add a row to the table
+			NROI_frame++;
+			ROIsTable->setRowCount(NROI_frame);
+
+			//Get ROI
+			currROI = currROI_reg.frameROI_info[data->frame_idx];
+
+			//ROI ID
+			ROItable_item = new QTableWidgetItem(QString::number(currROI_reg.ID));
+			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			ROIsTable->setItem(i, 0, ROItable_item);
+
+			//ROI lbl color: paint table cell
+			currLbl_color = data->labels_reg[currROI_reg.lbl_ID].color;	//ROI lbl color
+			QWidget *pWidget = new QWidget();
+			QString s("background: #"
+				+ QString(currLbl_color.red() < 16 ? "0" : "") + QString::number(currLbl_color.red(), 16)
+				+ QString(currLbl_color.green() < 16 ? "0" : "") + QString::number(currLbl_color.green(), 16)
+				+ QString(currLbl_color.blue() < 16 ? "0" : "") + QString::number(currLbl_color.blue(), 16) + ";");
+			pWidget->setStyleSheet(s);
+			ROIsTable->setCellWidget(i, 1, pWidget);
+			ROItable_item = new QTableWidgetItem(QString::number(1));
+			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			ROIsTable->setItem(i, 1, ROItable_item);
+
+			//ROI x
+			ROItable_item = new QTableWidgetItem(QString::number(currROI.left));
+			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			ROIsTable->setItem(i, 2, ROItable_item);
+
+			//ROI y
+			ROItable_item = new QTableWidgetItem(QString::number(currROI.top));
+			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			ROIsTable->setItem(i, 3, ROItable_item);
+
+			//ROI w
+			ROItable_item = new QTableWidgetItem(QString::number(currROI.w));
+			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			ROIsTable->setItem(i, 4, ROItable_item);
+
+			//ROI h
+			ROItable_item = new QTableWidgetItem(QString::number(currROI.h));
+			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			ROIsTable->setItem(i, 5, ROItable_item);
+		}		
+	}
+
+	ROIsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+	ROIsTable->setSelectionMode(QAbstractItemView::SingleSelection);
+}
+
+void playerWidget::highlightRowTable(QTableWidget *Table, int row)
+{
+	QTableWidget *ROIsTable = data->currFrame_ROIs;
+
+	for (int i = 0; i < data->currFrame_ROIs->columnCount(); i++)
+	{
+		//Avoid painting label color cells
+		if (i != 1)
+		{
+			ROIsTable->item(row, i)->setBackground(QColor(51, 153, 255));
+		}
+	}
+}

@@ -3,6 +3,7 @@
 
 #include <qwidget.h>
 #include <iostream>
+#include <qtablewidget.h>
 
 //Global structs
 struct label_info
@@ -38,6 +39,8 @@ int labelID_search(int ID, QVector<label_info> labels_reg);
 
 int ROIID_search(int ID, QVector<roi_register_info> KeyROIs_reg);
 
+void highlightRow(QTableWidget *Table, int row);
+
 class GTProject_data
 {
 public:
@@ -59,7 +62,17 @@ public:
 
 	int frame_idx;	
 	int video_length;
-	
+
+	double ROIselection_thr;			//Threshold for select a drawn ROI (Relative to frame size)
+	int ROIselection_thr_pix_w;			//Threshold in pixels for select a drawn ROI (width)
+	int ROIselection_thr_pix_h;			//Threshold in pixels for select a drawn ROI (height)
+
+	double ROIminsize_thr;				//Threshold for minimum size of a ROI (Relative to frame size)
+	int ROImin_w;						//Threshold in pixels for minimum width of a ROI
+	int ROImin_h;						//Threshold in pixels for minimum height of a ROI
+
+	QTableWidget *currFrame_ROIs;		//ROIs of the current frame
+
 private:
 
 	GTProject_data();

@@ -5,7 +5,7 @@ GTProject_data* GTProject_data::_instance = 0;
 GTProject_data::GTProject_data()
 {
 	//Default FPS if not given
-	fps = 15; 
+	fps = 30; 
 
 	//Initialize labels register with empty label 
 	label_info default_label;
@@ -18,10 +18,14 @@ GTProject_data::GTProject_data()
 	currLabel_ID = 0;
 
 	//Initialize current ROI ID as empty
-	currROI_ID = -1;
+	currROI_ID = 0;
 
 	//Initialize ROI selection flag as not selected
 	ROI_selected = false;
+
+	ROIselection_thr = 0.003;
+
+	ROIminsize_thr = 0.02;
 }
 
 GTProject_data* GTProject_data::Instance() {
@@ -59,4 +63,20 @@ int ROIID_search(int ID, QVector<roi_register_info> KeyROIs_reg)
 		}
 	}
 	return lbl_idx;
+}
+
+void highlightRow(QTableWidget *Table, int row)
+{
+	for (int i = 0; i < Table->columnCount(); i++)
+	{
+		//Avoid painting label color cells
+		if (i != 1)
+		{
+			Table->item(row, i)->setBackground(QColor(51, 153,255));
+
+			QTableWidgetItem *ROItable_item = new QTableWidgetItem(QString::number(i));
+			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+			Table->setItem(row, i, ROItable_item);
+		}
+	}
 }
