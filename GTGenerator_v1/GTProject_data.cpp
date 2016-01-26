@@ -65,18 +65,3 @@ int ROIID_search(int ID, QVector<roi_register_info> KeyROIs_reg)
 	return lbl_idx;
 }
 
-void highlightRow(QTableWidget *Table, int row)
-{
-	for (int i = 0; i < Table->columnCount(); i++)
-	{
-		//Avoid painting label color cells
-		if (i != 1)
-		{
-			Table->item(row, i)->setBackground(QColor(51, 153,255));
-
-			QTableWidgetItem *ROItable_item = new QTableWidgetItem(QString::number(i));
-			ROItable_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-			Table->setItem(row, i, ROItable_item);
-		}
-	}
-}

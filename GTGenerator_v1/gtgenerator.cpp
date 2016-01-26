@@ -246,6 +246,9 @@ void GTGenerator::acceptNewLabel()
 		new_label_struct.ID = labelID_reg;
 		labelID_reg++;
 
+		//Get current label ID
+		data->currLabel_ID = new_label_struct.ID;
+
 		//Save new label in labels register
 		data->labels_reg.push_back(new_label_struct);
 
@@ -337,10 +340,8 @@ void GTGenerator::update_labelsTable()
 	}
 	LabelsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	LabelsTable->setSelectionMode(QAbstractItemView::SingleSelection);
+	LabelsTable->setFocus();
 	LabelsTable->selectRow(newLabel_row);
-
-	//Get current label ID
-	data->currLabel_ID = data->labels_reg[LabelsTable->currentIndex().row()].ID;
 }
 
 void GTGenerator::currLabel_change(QTableWidgetItem *item)
@@ -369,6 +370,5 @@ void GTGenerator::initialize_ROIsTable()
 
 	ROIsTable->verticalHeader()->setVisible(false);
 	ROIsTable->horizontalHeader()->setStretchLastSection(true);
-
 }
 

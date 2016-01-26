@@ -51,7 +51,7 @@ public:
     QGroupBox *currentROI_group;
     QTableWidget *ROIs_table;
     QGroupBox *ROIenhance_group;
-    QWidget *verticalLayoutWidget_4;
+    QVBoxLayout *verticalLayout_5;
     QVBoxLayout *verticalLayout_4;
     QHBoxLayout *horizontalLayout_2;
     QSpacerItem *horizontalSpacer;
@@ -169,16 +169,16 @@ public:
 
         currentROI_group = new QGroupBox(centralWidget);
         currentROI_group->setObjectName(QStringLiteral("currentROI_group"));
-        QSizePolicy sizePolicy3(QSizePolicy::Fixed, QSizePolicy::Preferred);
+        QSizePolicy sizePolicy3(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
         sizePolicy3.setHorizontalStretch(0);
         sizePolicy3.setVerticalStretch(0);
         sizePolicy3.setHeightForWidth(currentROI_group->sizePolicy().hasHeightForWidth());
         currentROI_group->setSizePolicy(sizePolicy3);
         currentROI_group->setMinimumSize(QSize(300, 0));
-        currentROI_group->setMaximumSize(QSize(350, 16777215));
+        currentROI_group->setMaximumSize(QSize(350, 220));
         ROIs_table = new QTableWidget(currentROI_group);
         ROIs_table->setObjectName(QStringLiteral("ROIs_table"));
-        ROIs_table->setGeometry(QRect(10, 20, 331, 131));
+        ROIs_table->setGeometry(QRect(10, 20, 331, 191));
         QPalette palette;
         QBrush brush(QColor(170, 0, 0, 255));
         brush.setStyle(Qt::SolidPattern);
@@ -196,15 +196,14 @@ public:
         sizePolicy3.setHeightForWidth(ROIenhance_group->sizePolicy().hasHeightForWidth());
         ROIenhance_group->setSizePolicy(sizePolicy3);
         ROIenhance_group->setMinimumSize(QSize(300, 0));
-        ROIenhance_group->setMaximumSize(QSize(350, 16777215));
-        verticalLayoutWidget_4 = new QWidget(ROIenhance_group);
-        verticalLayoutWidget_4->setObjectName(QStringLiteral("verticalLayoutWidget_4"));
-        verticalLayoutWidget_4->setGeometry(QRect(9, 19, 331, 141));
-        verticalLayout_4 = new QVBoxLayout(verticalLayoutWidget_4);
+        ROIenhance_group->setMaximumSize(QSize(350, 120));
+        verticalLayout_5 = new QVBoxLayout(ROIenhance_group);
+        verticalLayout_5->setSpacing(6);
+        verticalLayout_5->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_5->setObjectName(QStringLiteral("verticalLayout_5"));
+        verticalLayout_4 = new QVBoxLayout();
         verticalLayout_4->setSpacing(6);
-        verticalLayout_4->setContentsMargins(11, 11, 11, 11);
         verticalLayout_4->setObjectName(QStringLiteral("verticalLayout_4"));
-        verticalLayout_4->setContentsMargins(0, 0, 0, 0);
         horizontalLayout_2 = new QHBoxLayout();
         horizontalLayout_2->setSpacing(6);
         horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
@@ -212,7 +211,7 @@ public:
 
         horizontalLayout_2->addItem(horizontalSpacer);
 
-        pushButton_2 = new QPushButton(verticalLayoutWidget_4);
+        pushButton_2 = new QPushButton(ROIenhance_group);
         pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
 
         horizontalLayout_2->addWidget(pushButton_2);
@@ -231,7 +230,7 @@ public:
 
         horizontalLayout_3->addItem(horizontalSpacer_4);
 
-        pushButton_3 = new QPushButton(verticalLayoutWidget_4);
+        pushButton_3 = new QPushButton(ROIenhance_group);
         pushButton_3->setObjectName(QStringLiteral("pushButton_3"));
 
         horizontalLayout_3->addWidget(pushButton_3);
@@ -250,7 +249,7 @@ public:
 
         horizontalLayout_4->addItem(horizontalSpacer_6);
 
-        pushButton_4 = new QPushButton(verticalLayoutWidget_4);
+        pushButton_4 = new QPushButton(ROIenhance_group);
         pushButton_4->setObjectName(QStringLiteral("pushButton_4"));
 
         horizontalLayout_4->addWidget(pushButton_4);
@@ -261,6 +260,9 @@ public:
 
 
         verticalLayout_4->addLayout(horizontalLayout_4);
+
+
+        verticalLayout_5->addLayout(verticalLayout_4);
 
 
         verticalLayout->addWidget(ROIenhance_group);

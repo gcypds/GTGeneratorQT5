@@ -76,6 +76,9 @@ void playerWidget::playerInitialization()
 
 	//Initialize ROI drawing state
 	mouse_ROIstate = 0;
+
+	//ROIs table interaction functions
+	connect(data->currFrame_ROIs, SIGNAL(itemClicked(QTableWidgetItem *)), this, SLOT(currROI_change(QTableWidgetItem *)));
 }
 
 void playerWidget::on_playButton_clicked()
@@ -216,6 +219,10 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 					{
 						//Change mouse_ROIstate to "being drawn"
 						mouse_ROIstate = 1;
+
+						//Unselect row from ROIs table
+						data->currFrame_ROIs->setFocus();
+						data->currFrame_ROIs->clearSelection();
 					}
 				}				
 			}
@@ -247,6 +254,13 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 
 				//Display frame 
 				displayFrame(Frame_ROI);
+			}
+
+			//Deselect rows from ROIs table
+			if (!data->ROI_selected)
+			{
+				data->currFrame_ROIs->setFocus();
+				data->currFrame_ROIs->clearSelection();
 			}
 		}
 		//-------Mouse released on video-------
@@ -290,11 +304,11 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				}
 				else
 				{
-					//Change mouse_ROIstate to not drawn
-					mouse_ROIstate = 0;
-
 					//Display frame 
 					displayFrame(currFrame);
+
+					//Change mouse_ROIstate to not drawn
+					mouse_ROIstate = 0;
 				}
 			}
 		}
@@ -388,8 +402,6 @@ bool playerWidget::ROIclicked_check(int x, int y)
 			{
 				data->currROI_ID = data->ROIs_reg[i].ID;
 				sel = true;
-				highlightRowTable(data->currFrame_ROIs, i);
-				system("pause");
 				break;				
 			}
 		}
@@ -411,6 +423,10 @@ void playerWidget::highlightSelected_ROI(int ROI_ID)
 
 	//Display frame 
 	displayFrame(Frame_ROI);
+
+	//Highlight ROI row in ROIs table
+	data->currFrame_ROIs->setFocus();
+	data->currFrame_ROIs->selectRow(ROI_ID);
 }
 
 
@@ -482,18 +498,18 @@ void playerWidget::update_ROIsTable()
 
 	ROIsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ROIsTable->setSelectionMode(QAbstractItemView::SingleSelection);
+
+	//Highlight new ROI row
+	ROIsTable->setFocus();
+	ROIsTable->selectRow(NROI_frame-1);
 }
 
-void playerWidget::highlightRowTable(QTableWidget *Table, int row)
+void playerWidget::currROI_change(QTableWidgetItem *item)
 {
-	QTableWidget *ROIsTable = data->currFrame_ROIs;
+	//Get current ROI ID
+	data->currROI_ID = data->ROIs_reg[data->currFrame_ROIs->currentIndex().row()].ID;
 
-	for (int i = 0; i < data->currFrame_ROIs->columnCount(); i++)
-	{
-		//Avoid painting label color cells
-		if (i != 1)
-		{
-			ROIsTable->item(row, i)->setBackground(QColor(51, 153, 255));
-		}
-	}
+	//Highlight in widget the selected ROI
+	highlightSelected_ROI(data->currROI_ID);
 }
+

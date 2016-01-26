@@ -39,8 +39,6 @@ int labelID_search(int ID, QVector<label_info> labels_reg);
 
 int ROIID_search(int ID, QVector<roi_register_info> KeyROIs_reg);
 
-void highlightRow(QTableWidget *Table, int row);
-
 class GTProject_data
 {
 public:

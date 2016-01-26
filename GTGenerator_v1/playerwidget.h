@@ -41,8 +41,6 @@ private:
 
 	void update_ROIsTable();
 
-	void highlightRowTable(QTableWidget *Table, int row);
-
 	//Project global variables
 	GTProject_data *data;
 
@@ -93,7 +91,7 @@ protected:
 	
 	void readFrame();
 	
-
+	void currROI_change(QTableWidgetItem *item);
 };
 
 #endif
