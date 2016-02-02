@@ -24,6 +24,8 @@ GTplayerWidget(new Ui::playerWidget)
 	video_loaded = false;
 
 	//Tagging variables and functions------------------------
+	GTplayerWidget->image_label->setMouseTracking(true);
+
 	GTplayerWidget->image_label->installEventFilter(this);
 
 	//Project global variables
@@ -209,11 +211,14 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 					ROI_left = int(floor(double(ROI_left)*(double(currFrame.size().width) / double(scaledFrame_width))));
 					ROI_up = int(floor(double(ROI_up)*(double(currFrame.size().height) / double(scaledFrame_height))));
 
-					data->ROI_selected = ROIclicked_check(ROI_left, ROI_up);
+					//Check if mouse click selected a ROI
+					mousePosition_ROIcheck(ROI_left, ROI_up);
+					setMouseCursor(data->mouseROItype_sel, play_state, 1);
 
 					if (data->ROI_selected)
 					{
-						highlightSelected_ROI(data->currROI_ID);
+						//Highlight selected ROI
+						highlightSelected_ROI(data->currROI_ID);						
 					}	
 					else
 					{
@@ -262,6 +267,10 @@ bool playerWidget::eventFilter(QObject *obj, QEvent *event)
 				data->currFrame_ROIs->setFocus();
 				data->currFrame_ROIs->clearSelection();
 			}
+
+			//Check if mouse click selected a ROI
+			mousePosition_ROIcheck(ROI_right, ROI_down);
+			setMouseCursor(data->mouseROItype_sel, play_state, 0);
 		}
 		//-------Mouse released on video-------
 		if (event->type() == QEvent::MouseButtonRelease)
@@ -375,15 +384,24 @@ void playerWidget::drawROI_currFrame()
 	}
 }
 
-bool playerWidget::ROIclicked_check(int x, int y)
+void playerWidget::mousePosition_ROIcheck(int x, int y)
 {
 	roi_info ROIcurrFrame;
 
 	int thr_x = data->ROIselection_thr_pix_w;
 	int thr_y = data->ROIselection_thr_pix_h;
 
-	bool c_left, c_right, c_top, c_bot;
-	bool sel = false;
+	//Edge conditions
+	bool edge_left, edge_right, edge_top, edge_bot;
+
+	//Inside conditions
+	bool in_width, in_height;
+
+	//Initialize mouse state as not ROI selected
+	data->mouseROItype_sel = 0;
+
+	//Initialize ROI selection as false
+	data->ROI_selected = false;
 
 	for (int i = 0; i < data->ROIs_reg.size(); i++)
 	{
@@ -392,21 +410,48 @@ bool playerWidget::ROIclicked_check(int x, int y)
 
 		if (!ROIcurrFrame.empty)
 		{
-			//Check if click coordinates are near to ROI boundaries
-			c_left = (x <= ROIcurrFrame.left + thr_x) && (x >= ROIcurrFrame.left - thr_x) && (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.top - thr_y);
-			c_right = (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.right - thr_x) && (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.top - thr_y);
-			c_top = (y <= ROIcurrFrame.top + thr_y) && (y >= ROIcurrFrame.top - thr_y) && (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.left - thr_x);
-			c_bot = (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.bot - thr_y) && (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.left - thr_x);
+			//Check if mouse coordinates are inside a ROI
+			in_width = (x > ROIcurrFrame.left + thr_x) && (x < ROIcurrFrame.right - thr_x);
+			in_height = (y > ROIcurrFrame.top + thr_y) && (y < ROIcurrFrame.bot - thr_y);
 
-			if (c_left || c_right || c_bot || c_top)
+			if (in_width || in_height)
 			{
+				//Select ROI to highlight and change mouse_state to edge selection
+				data->mouseROItype_sel = 1;
 				data->currROI_ID = data->ROIs_reg[i].ID;
-				sel = true;
-				break;				
+
+				//Set ROI selection as true
+				data->ROI_selected = true;
+			}
+
+			//Check if mouse coordinates are near to ROI edges
+			edge_left = (x <= ROIcurrFrame.left + thr_x) && (x >= ROIcurrFrame.left - thr_x) && (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.top - thr_y);
+			edge_right = (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.right - thr_x) && (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.top - thr_y);
+			edge_top = (y <= ROIcurrFrame.top + thr_y) && (y >= ROIcurrFrame.top - thr_y) && (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.left - thr_x);
+			edge_bot = (y <= ROIcurrFrame.bot + thr_y) && (y >= ROIcurrFrame.bot - thr_y) && (x <= ROIcurrFrame.right + thr_x) && (x >= ROIcurrFrame.left - thr_x);
+
+			//Vertical edge
+			if (edge_left || edge_right)
+			{
+				data->mouseROItype_sel = 2;
+			}
+
+			//Horizontal edge
+			if (edge_left || edge_right)
+			{
+				data->mouseROItype_sel = 3;
+			}
+
+			if (edge_left || edge_right || edge_top || edge_bot)
+			{
+				//Select ROI to highlight and change mouse_state to edge selection
+				data->currROI_ID = data->ROIs_reg[i].ID;
+
+				//Set ROI selection as true
+				data->ROI_selected = true;
 			}
 		}
 	}
-	return sel;
 }
 
 void playerWidget::highlightSelected_ROI(int ROI_ID)
@@ -495,7 +540,6 @@ void playerWidget::update_ROIsTable()
 			ROIsTable->setItem(i, 5, ROItable_item);
 		}		
 	}
-
 	ROIsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ROIsTable->setSelectionMode(QAbstractItemView::SingleSelection);
 
@@ -513,3 +557,61 @@ void playerWidget::currROI_change(QTableWidgetItem *item)
 	highlightSelected_ROI(data->currROI_ID);
 }
 
+void playerWidget::setMouseCursor(int typeSel, bool play_State, int mouseEventType)
+{
+	//typesel = 0: Not selected; 1: Inside a ROI; 2: On vertical ROI boundary; 3: On horizontal ROI boundary
+	//4: draw ROI
+	//play_State = true: play; false: pause
+	//mouseEventType = 0: Move; 1: Click; 2: Release
+
+	if (typeSel == 0)
+	{
+		if (mouseEventType == 0)
+		{
+			if (play_State)
+				this->setCursor(Qt::ArrowCursor);
+			else
+				this->setCursor(Qt::CrossCursor);
+		}
+
+		if (mouseEventType == 1)
+		{
+			if (play_State)
+				this->setCursor(Qt::CrossCursor);
+			else
+			{
+				this->setCursor(Qt::SizeAllCursor);
+			}
+		}
+	}
+
+	if (typeSel == 1)
+	{
+		if (mouseEventType == 0)
+		{
+			if (!play_State)
+				this->setCursor(Qt::OpenHandCursor);
+		}
+
+		if (mouseEventType == 1)
+		{
+			if (!play_State)
+				this->setCursor(Qt::ClosedHandCursor);
+		}
+	}
+
+	if (typeSel == 5)
+	{
+		if (mouseEventType == 0)
+		{
+			if (!play_State)
+				this->setCursor(Qt::SizeAllCursor);
+		}
+
+		if (mouseEventType == 2)
+		{
+			if (!play_State)
+				this->setCursor(Qt::CrossCursor);
+		}
+	}
+}

@@ -52,6 +52,8 @@ public:
 	int currLabel_ID;					//Current selected label ID
 	int currROI_ID;						//Current selected ROI ID
 	bool ROI_selected;					//true: ROI is new, false: ROI is selected
+	int mouseROItype_sel;				//Mouse selection state. 0: Not ROI selected; 1: Inside a ROI; 2: On vertical ROI boundary; 
+										//3: On horizontal ROI boundary; 4: draw ROI
 
 	std::string imgSeq_path;			//Path to image sequence
 	QStringList imgSeq_list;			//Frames list

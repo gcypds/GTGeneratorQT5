@@ -35,11 +35,13 @@ private:
 
 	void drawROI_currFrame();
 
-	bool ROIclicked_check(int x, int y);
+	void mousePosition_ROIcheck(int x, int y);
 
 	void highlightSelected_ROI(int ROI_ID);
 
 	void update_ROIsTable();
+
+	void setMouseCursor(int typeSel, bool play_State, int mouseEventType);
 
 	//Project global variables
 	GTProject_data *data;

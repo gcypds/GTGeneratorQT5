@@ -26,6 +26,9 @@ GTProject_data::GTProject_data()
 	ROIselection_thr = 0.003;
 
 	ROIminsize_thr = 0.02;
+
+	//Initialize mouseROItype_sel as not ROI selected
+	mouseROItype_sel = 0;
 }
 
 GTProject_data* GTProject_data::Instance() {
